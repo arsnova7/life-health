@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2강 - 생활과 건강 플래시카드</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* 1. 컨테이너 너비를 850px로 넓혀서 글자가 옆으로 퍼지게 했습니다 */
+        .container { max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; }
+        
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        
+        /* 2. 카드 높이를 400px로 키우고, 단어 단위 정렬(keep-all)을 추가했습니다 */
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            margin: 20px 0; 
+            min-height: 400px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 1.25rem; 
+            font-weight: bold; 
+            word-break: keep-all; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+            position: relative; 
+        }
+        
+        .card.flipped { transform: rotateY(180deg); }
+        .side { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: 20px; overflow-y: auto; }
+        .back { transform: rotateY(180deg); background: #f8f9fa; color: #5c6ac4; }
+        .controls { display: flex; justify-content: space-between; gap: 10px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; background: white; color: #764ba2; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>제2강 플래시카드</h1>
+            <p><span id="current">1</span> / <span id="total">50</span></p>
+        </div>
+        <div class="card" id="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="side front" id="question">질문 로딩 중...</div>
+            <div class="side back" id="answer">정답 로딩 중...</div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="prevCard()">이전</button>
+            <button class="btn" onclick="nextCard()">다음</button>
+            <button class="btn" onclick="location.href='index.html'">목록으로</button>
+        </div>
+    </div>
+
+    <script>
+        // 주석(//)을 제거하여 데이터를 정상적으로 읽게 수정했습니다.
+        const cards = [
+            {"q": "★★★ 심장은 일생 동안 쉬지 않고 스스로 움직이는 근육성 펌프이다. 심장의 구조는 어떻게 이루어져 있는가? [2018년 기출]", "a": "2개의 방(atrium)과 2개의 실(ventricle)"},
+    {"q": "★★★ 전신을 순환하고 돌아온 이산화탄소와 노폐물이 많은 혈액이 대정맥을 타고 가장 먼저 들어오는 심장의 부위는? [2018년 기출]", "a": "우심방"},
+    {"q": "★★★ 폐에서 산소를 공급받은 깨끗한 혈액이 폐정맥을 통해 심장으로 들어오는 부위는? [2017년 기출]", "a": "좌심방"},
+    {"q": "★★ 심장에서 가장 깨끗하고 영양가가 많은 혈액을 대동맥을 통해 전신으로 뿜어내는 부위는?", "a": "좌심실"},
+    {"q": "★★★ 심장이 수축할 때 혈액이 혈관벽에 부딪히면서 생기는 가장 높은 압력은? [2019년 기출]", "a": "수축기 혈압"},
+    {"q": "★★★ 심장이 다시 혈액을 채우기 위해 확장(이완)할 때 혈관에 유지되는 압력은? [2018년 기출]", "a": "이완기 혈압"},
+    {"q": "★★ 심뇌혈관질환의 발생 위험이 가장 낮은 '정상혈압'의 수축기/이완기 기준은?", "a": "수축기 120 미만 그리고 이완기 80 미만"},
+    {"q": "★★★ 고혈압으로 진단되는 수축기 또는 이완기 혈압의 기준은? [2015년 기출]", "a": "수축기 140 이상 또는 이완기 90 이상 (1기 고혈압 기준)"},
+    {"q": "★★★ 원인이 명확하지 않으며, 유전, 식이염분, 스트레스 등이 위험요인으로 작용하는 고혈압으로 전체의 90~95%를 차지하는 것은? [2015년 기출]", "a": "본태성(일차성) 고혈압"},
+    {"q": "★★★ 다른 질병에 의해 2차적으로 발생하며, 원인 질환을 제거해야 하는 고혈압은? [2018년 기출]", "a": "속발성(이차성) 고혈압"},
+    {"q": "★★ 고혈압은 초기 증상이 거의 없어 일명 무엇이라고 불리는가?", "a": "침묵의 살인자"},
+    {"q": "★★★ 고혈압 약은 혈압이 정상으로 떨어지면 임의로 복용을 중단해도 된다. (O/X) [2019년 기출]", "a": "X (처방받은 약은 규칙적으로 꾸준히 복용해야 함)"},
+    {"q": "★★★ 심장근육에 혈액을 공급하는 전용 혈관의 이름은? [2018년 기출]", "a": "관상동맥"},
+    {"q": "★★★ 관상동맥 내벽에 콜레스테롤이나 지방이 축적되어 혈관벽이 두꺼워지고 딱딱해져 혈관 내공이 좁아지는 현상은? [2018년 기출]", "a": "동맥경화증"},
+    {"q": "★★★ 심근에 일시적으로 혈액공급이 부족하여 갑작스럽게 흉골 밑에 조이는 듯한 통증이 나타나며, 휴식이나 니트로글리세린으로 완화되는 질환은? [2017년 기출]", "a": "협심증"},
+    {"q": "★★★ 관상동맥의 완전 폐쇄로 심장근육에 괴사가 일어나며, 휴식으로 통증이 완화되지 않아 모르핀 투여가 필요한 질환은? [2019년 기출]", "a": "심근경색증"},
+    {"q": "★★ 허혈성 심장질환의 위험 요인 중 혈중 콜레스테롤은 얼마 이상일 때 심장마비 위험이 2배 증가하는가?", "a": "240mg 이상"},
+    {"q": "★★ 허혈성 심장질환은 남성에게 더 흔하지만, 여성의 경우 언제 위험도가 급격히 증가하는가?", "a": "갱년기 이후 (에스트로겐 분비 감소)"},
+    {"q": "★★ 좁아진 관상동맥 부위에 가느다란 철망을 씌운 풍선을 넣어 혈관이 다시 좁아지지 않도록 지지해 주는 시술은?", "a": "스텐트 삽입술"},
+    {"q": "★★ 막힌 관상동맥을 우회하여 신체의 다른 부위 혈관을 떼어 이어주는 일종의 샛길을 만드는 수술은?", "a": "관상동맥 우회로술"},
+    {"q": "★★ 구강에서 항문까지 이르는 소화관의 전체 길이는 대략 얼마인가?", "a": "약 9m"},
+    {"q": "★★ 소화관으로 소화액을 공급하는 소화선(gland)에 해당하는 주요 기관들은?", "a": "침샘, 간, 담낭, 췌장"},
+    {"q": "★★★ 금식 상태에서는 50ml 정도이나 음식을 섭취하면 1.5~2.5L까지 용적이 증가하는 신축성 있는 기관은? [2018년 기출]", "a": "위(Stomach)"},
+    {"q": "★★★ 위와 소장을 거쳐 내려온 내용물로부터 주로 수분과 전해질을 흡수하는 소화기관은? [2019년 기출]", "a": "대장"},
+    {"q": "★★ 오른쪽 늑골 바로 밑에 위치하며 인체에서 가장 큰 선(gland) 조직은?", "a": "간(Liver)"},
+    {"q": "★★★ 혈액에서 과도한 포도당을 글리코겐 상태로 바꾸어 저장하는 기관은? [2017년 기출]", "a": "간"},
+    {"q": "★★★ 알코올, 약물, 각종 독성물질을 불활성화하여 해독작용을 하는 소화기계 장기는? [2018년 기출]", "a": "간"},
+    {"q": "★★★ 간에 존재하는 포식세포로, 혈액을 통해 들어오는 박테리아 등 특정 물질을 제거하는 세포의 이름은? [2019년 기출]", "a": "쿠퍼세포 (Kupffer cell)"},
+    {"q": "★★★ 간은 대부분의 혈장단백질과 혈액응고인자를 합성하는 역할을 한다. (O/X) [2018년 기출]", "a": "O"},
+    {"q": "★★★ 자극성 음식, 과도한 알코올, 아스피린(비스테로이드성 소염제), 스트레스 등이 주원인이 되어 발생하는 질환은? [2019년 기출]", "a": "급성위염"},
+    {"q": "★★ 만성위염 및 소화성 궤양, 위암의 주요 발생 원인으로 꼽히는 세균의 이름은?", "a": "헬리코박터 파일로리균"},
+    {"q": "★★★ 소화성 궤양은 십이지장보다 위에서 더 흔하게 발생한다. (O/X) [2017년 기출]", "a": "X (위보다 십이지장에 더 잘 생김)"},
+    {"q": "★★★ 소화성 궤양의 1차적 원인은 과도한 스트레스이다. (O/X) [2017년 기출]", "a": "X (1차적 원인은 헬리코박터균 감염 및 진통소염제 부작용 등임)"},
+    {"q": "★★ 우리나라는 위암 발생 빈도가 높으며, 최근 40세 이하 젊은 층에서도 증가하고 있다. 위암 예방을 위해 피해야 할 음식 유형은?", "a": "훈제식품, 짠 음식, 불에 탄 음식"},
+    {"q": "★★ 오염된 물이나 음식물을 섭취하여 주로 집단으로 발병하는 간염 바이러스 유형은? [2017년 기출]", "a": "A형 간염"},
+    {"q": "★★★ 주로 감염자의 혈액, 체액, 오염된 주삿바늘, 수직감염 등을 통해 비경구적으로 전파되는 간염은? [2019년 기출]", "a": "B형 간염"},
+    {"q": "★★ B형 간염 예방접종은 총 몇 회 근육주사 하는가?", "a": "총 3회 (0, 1, 6개월)"},
+    {"q": "★★ C형 간염은 현재 효과적인 예방 백신이 개발되어 있다. (O/X)", "a": "X (C형 간염은 예방 백신이 없음)"},
+    {"q": "★★★ 간경화증(간경변증)의 가장 주요한 원인으로 꼽히는 생활습관은? [2018년 기출]", "a": "알코올 섭취"},
+    {"q": "★★★ 간경화증은 질병 초기에는 간이 작아지며, 복수와 문맥성 고혈압이 즉시 나타난다. (O/X) [2015년 기출]", "a": "X (초기에는 간이 커지고 증상이 뚜렷하지 않음)"},
+    {"q": "★★★ 간경화증이 악화되었을 때 동반되는 대표적인 합병증 3가지는? [2019년 기출]", "a": "복수, 문맥성 고혈압, 간성 혼수(또는 신부전)"},
+    {"q": "★★ 간암은 원발성 간암보다 다른 장기에서 전이되어 발생하는 전이성 간암이 훨씬 흔하다. (O/X)", "a": "O (간은 혈관 조직이 발달하여 전이가 쉬움)"},
+    {"q": "★★ 간암 발생의 주요 원인이 되는 곰팡이 독소(발암물질)의 이름은?", "a": "아플라톡신(Aflatoxin)"},
+    {"q": "★★ 간암의 조기검진을 위해 혈액 내 종양표지자를 확인하는 검사는?", "a": "알파태아단백(AFP) 검사"},
+    {"q": "★★ 심장과 폐는 해부학적으로 분리되어 있어, 심장 질환은 폐 기능에 영향을 미치지 않는다. (O/X)", "a": "X (심혈관계와 호흡기계는 상호 밀접하게 연결되어 있음)"},
+    {"q": "★★ 협심증 통증 발생 시 혀 밑에 넣는(설하 투여) 응급 약물의 이름은?", "a": "니트로글리세린"},
+    {"q": "★★ 간경화증 환자의 파괴된 간세포 재생을 위해 일반적으로 어떤 식이를 권장하는가?", "a": "고단백, 고칼로리 식이 (단, 간성혼수 위험 시 단백질 제한)"},
+    {"q": "★★ 간 기능 중 지방의 소화와 흡수를 촉진하기 위해 생산하는 물질은?", "a": "담즙"},
+    {"q": "★★ 간에서 분비된 담즙을 일시적으로 저장해 두었다가 지방 소화를 위해 장으로 유입시키는 장기는?", "a": "담낭"},
+    {"q": "★★ 급성위염 환자가 복부 불편감과 구토 증상을 보일 때 가장 주의해야 할 약물 성분은?", "a": "비스테로이드성 소염제(아스피린 등)"}
+        ];
+
+        let cur = 0;
+        const qEl = document.getElementById('question');
+        const aEl = document.getElementById('answer');
+        const curEl = document.getElementById('current');
+        const totEl = document.getElementById('total');
+
+        function updateCard() {
+            qEl.textContent = cards[cur].q;
+            aEl.textContent = cards[cur].a;
+            curEl.textContent = cur + 1;
+            totEl.textContent = cards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function nextCard() { cur = (cur + 1) % cards.length; updateCard(); }
+        function prevCard() { cur = (cur - 1 + cards.length) % cards.length; updateCard(); }
+
+        // 초기 실행
+        updateCard();
+    </script>
+</body>
+</html>

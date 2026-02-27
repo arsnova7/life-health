@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1강 - 생활과 건강 플래시카드</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* 1. 컨테이너 너비를 850px로 넓혀서 글자가 옆으로 퍼지게 했습니다 */
+        .container { max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; }
+        
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        
+        /* 2. 카드 높이를 400px로 키우고, 단어 단위 정렬(keep-all)을 추가했습니다 */
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            margin: 20px 0; 
+            min-height: 400px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 1.25rem; 
+            font-weight: bold; 
+            word-break: keep-all; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+            position: relative; 
+        }
+        
+        .card.flipped { transform: rotateY(180deg); }
+        .side { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: 20px; overflow-y: auto; }
+        .back { transform: rotateY(180deg); background: #f8f9fa; color: #5c6ac4; }
+        .controls { display: flex; justify-content: space-between; gap: 10px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; background: white; color: #764ba2; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>제3강 플래시카드</h1>
+            <p><span id="current">1</span> / <span id="total">50</span></p>
+        </div>
+        <div class="card" id="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="side front" id="question">질문 로딩 중...</div>
+            <div class="side back" id="answer">정답 로딩 중...</div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="prevCard()">이전</button>
+            <button class="btn" onclick="nextCard()">다음</button>
+            <button class="btn" onclick="location.href='index.html'">목록으로</button>
+        </div>
+    </div>
+
+    <script>
+        // 주석(//)을 제거하여 데이터를 정상적으로 읽게 수정했습니다.
+        const cards = [
+            {"q": "★★★ 비강에서부터 인두, 후두까지 이르는 호흡기계의 상부 통로를 무엇이라 하는가? [강의/교재]", "a": "상기도"},
+    {"q": "★★★ 기관, 기관지, 세기관지, 폐포로 이어지는 호흡기계의 하부 구조를 무엇이라 하는가? [강의/교재]", "a": "하부기도"},
+    {"q": "★★★ 호흡기계의 폐(허파)는 좌우 구조가 다르다. 우폐와 좌폐는 각각 몇 개의 엽(lobe)으로 이루어져 있는가? [강의/교재]", "a": "우폐 3엽, 좌폐 2엽"},
+    {"q": "★★★ 비강(코)의 점막과 솜털이 호흡 과정에서 수행하는 3가지 주요 기능은 무엇인가? [강의/교재]", "a": "이물질 제거(필터링), 가습, 가온"},
+    {"q": "★★★ 폐포(허파꽈리)를 둘러싸고 있는 모세혈관에서 산소와 이산화탄소가 교환되는 과정을 일컫는 용어는? [강의/교재]", "a": "외호흡(허파 호흡)"},
+    {"q": "★★★ 심장과 폐는 밀접하게 엮여 하나의 일을 하는 체계를 갖추고 있다. 이를 무엇이라 부르는가? [강의/교재]", "a": "심폐 기능"},
+    {"q": "★★★ 급성후두염 증상을 악화시키는 대표적인 외부 환경 요인은 무엇인가? [교재]", "a": "차고 건조한 바람 (찬 공기나 찬 음료)"},
+    {"q": "★★★ 급성후두염을 방치할 경우 주변 조직으로 염증이 진행되어 발생할 수 있는 가장 위험한 증상은? [교재]", "a": "후두 부종으로 인한 호흡곤란"},
+    {"q": "★★★ 급성후두염이 세균 감염에 의한 것이거나 염증이 오래 지속될 경우 반드시 처방받아 투여해야 하는 약물은? [교재]", "a": "항생제"},
+    {"q": "★★★ 폐렴은 세균뿐만 아니라 화학물질이나 방사선 치료 등에 의한 '비감염성' 원인으로도 발생할 수 있다. (O/X) [강의/교재]", "a": "O"},
+    {"q": "★★★ 폐렴의 원인균을 정확히 진단하기 위해 흉부 X선과 함께 실시하는 필수 정밀 검사는? [2017년 기출/교재]", "a": "객담 배양 검사 및 혈액 배양 검사"},
+    {"q": "★★★ 폐렴구균에 의한 폐렴은 특정 집단에게 백신 접종이 강력히 권장된다. 이 집단은? [2018년 기출/교재]", "a": "고위험군"},
+    {"q": "★★★ 폐렴 치료 시 단일 약물이 아닌 여러 항생제를 '혼합 처방'하는 주된 이유는 무엇인가? [강의/교재]", "a": "항생제 내성균 문제 때문"},
+    {"q": "★★★ 1882년 결핵의 병원체인 결핵균을 최초로 발견한 독일의 세균학자는? [강의/교재]", "a": "로버트 코흐"},
+    {"q": "★★★ 결핵균은 환자의 입에서 배출된 수분 입자가 증발하면서 공기 중에 떠다니는 형태로 감염을 일으킨다. 이를 무엇이라 하는가? [★★★ 워크북]", "a": "비말핵"},
+    {"q": "★★★ 결핵균에 노출된 사람은 모두 결핵에 감염된다. (O/X) [2016년 기출/교재]", "a": "X (노출된 사람의 약 1/3만 감염됨)"},
+    {"q": "★★★ 결핵균에 감염된 사람 중 실제로 결핵 환자로 발병(진행)하는 비율은 대략 얼마인가? [강의/교재]", "a": "약 10%"},
+    {"q": "★★★ 2018년 기준 우리나라 결핵 신(新)환자 통계에서 여성이 남성보다 많다. (O/X) [강의록]", "a": "X (남성이 여성보다 약 1.38배 많음)"},
+    {"q": "★★★ 2018년 기준 우리나라 전체 결핵 환자 중 가장 높은 비중(19.2%)을 차지하는 연령대는? [강의록]", "a": "80대 이상"},
+    {"q": "★★★ 우리나라의 결핵 발생률은 경제협력개발기구(OECD) 회원국 중 어느 정도 수준인가? [강의록]", "a": "발생률 1위 (가장 높음)"},
+    {"q": "★★★ 우리나라 결핵예방관리 강화대책의 목표는 2030년까지 결핵 발병률을 10만 명당 몇 명 수준으로 낮추는 것인가? [강의록]", "a": "10명 수준"},
+    {"q": "★★★ 에이즈 환자, 만성 신부전 환자, 장기 이식자 등은 결핵 발병의 어느 군에 속하는가? [교재]", "a": "고위험군"},
+    {"q": "★★★ 결핵은 초기 진행이 매우 빨라 감염 즉시 극심한 증상이 나타난다. (O/X) [2016년 기출/교재]", "a": "X (천천히 발병하여 많이 진전될 때까지 무증상인 경우가 많음)"},
+    {"q": "★★★ 2주 이상 지속되는 누런 점액 성분의 가래가 섞인 기침은 어느 호흡기 질환을 강력히 의심해야 하는가? [강의/교재]", "a": "결핵"},
+    {"q": "★★★ 결핵의 전형적인 전신 증상으로, 소모성 질환의 특성상 체중이 늘어난다. (O/X) [★★★ 워크북]", "a": "X (체중 감소가 발생함)"},
+    {"q": "★★★ 결핵 환자가 흔히 경험하는 특이적인 발열 및 발한 양상은? [★★★ 워크북/강의]", "a": "오후에 미열이 나고 밤에 식은땀을 많이 흘림"},
+    {"q": "★★★ 결핵 감염을 확인하기 위해 피부에 실시하는 대표적인 진단 검사의 이름은? (TST) [교재]", "a": "투베르쿨린 피부반응 검사"},
+    {"q": "★★★ 결핵을 예방하기 위해 사람에게 병을 일으키지 않고 면역을 갖게 하는 예방접종 백신의 이름은? [2015년 기출/★★★ 워크북]", "a": "비시지(BCG) 백신"},
+    {"q": "★★★ 비시지(BCG) 백신 접종 후에는 결핵 발병률이 대략 얼마로 줄어드는가? [교재]", "a": "1/5로 줄어듦 (효과 10년 이상 지속)"},
+    {"q": "★★★ 결핵은 약물치료만으로 완치가 불가능한 질병이다. (O/X) [2016년 기출/교재]", "a": "X (장기간 꾸준한 약물치료만으로 완치가 가능함)"},
+    {"q": "★★★ 결핵균을 박멸하기 위한 필수적인 약물치료의 일반적인 기간은? [★★★ 워크북]", "a": "6~12개월"},
+    {"q": "★★★ 결핵 치료 시 약물에 대한 내성을 막기 위해 대개 몇 가지의 항결핵제 약물을 함께 처방하는가? [교재]", "a": "3~4가지 복합 처방"},
+    {"q": "★★★ 결핵 환자가 증상이 호전되었다고 느껴 임의로 약물 복용을 중단하면 발생하는 가장 치명적인 문제는? [강의/교재]", "a": "내성이 생겨 재발하고 치료가 매우 어려워짐"},
+    {"q": "★★★ 결핵 환자는 타인에게 균을 퍼뜨리지 않기 위해 객담 검사에서 '이것'이 나올 때까지 마스크를 착용해야 한다. [교재]", "a": "음성 판정"},
+    {"q": "★★★ 호흡기 전염병 예방을 위해 기침할 때 손으로 입을 가리는 것이 가장 올바른 기침 예절이다. (O/X) [강의/교재]", "a": "X (옷소매나 팔꿈치 안쪽으로 가려야 함)"},
+    {"q": "★★★ 인체에서 가장 복잡한 구조를 지닌 체계로, 주로 조절계 및 통신계의 기능을 담당하는 곳은? [★★★ 워크북]", "a": "신경계"},
+    {"q": "★★★ 신경계는 해부학적으로 크게 어떤 두 가지 신경계로 분류되는가? [★★★ 워크북]", "a": "중추신경계와 말초신경계"},
+    {"q": "★★★ 결핵 환자의 간호 시 개소주나 뱀탕 같은 건강보조식품을 적극 권장해야 한다. (O/X) [강의/교재]", "a": "X (의학적 근거가 없으며 간 기능을 악화시킬 수 있어 지양해야 함)"},
+    {"q": "★★★ 급성후두염은 주로 바이러스성 감염이므로 특정 치료제보다 자연 치유를 위한 휴식이 우선이다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 폐렴 치료를 위해 의료인들은 항생제의 부적절한 사용을 최대화하여 즉각 처방해야 한다. (O/X) [2017년 기출/교재]", "a": "X (항생제 내성 문제로 부적절한 사용을 최소화해야 함)"},
+    {"q": "★★★ 폐로 들어간 산소가 풍부한 혈액은 폐정맥을 통해 심장의 어느 부위로 들어가는가? [교재]", "a": "좌심방"},
+    {"q": "★★★ 결핵균 진단을 위해 실시하는 객담 검사는 도말 검사와 무엇으로 나뉘는가? [교재]", "a": "배양 검사"},
+    {"q": "★★★ 1940년대 후반 이것이 개발되면서 약 30년간 결핵 발병률이 급격히 감소하였다. 이것은? [강의록]", "a": "항결핵제"},
+    {"q": "★★★ 2013년 우리나라가 결핵 관리를 위해 처음으로 수립한 중장기 정책의 명칭은? [강의록]", "a": "제1기 결핵관리 종합계획"},
+    {"q": "★★★ 호흡기계의 방어기전 중 콧속 점막과 솜털이 수행하는 이물질 제거 작용을 다른 말로 무엇이라 하는가? [강의/교재]", "a": "필터링(Filtering)"},
+    {"q": "★★★ 결핵은 비말핵 외에도 환자와의 직접적인 대화 중 튀는 이것에 의해서도 감염될 수 있다. [★★★ 워크북]", "a": "침방울"},
+    {"q": "★★★ 결핵 환자는 소모성 질환의 특성상 식욕 부진이 오므로 규칙적이고 균형 잡힌 영양 섭취가 매우 중요하다. (O/X) [★★★ 워크북]", "a": "O"},
+    {"q": "★★★ 신경계는 인간의 호흡, 순환을 포함한 신체의 모든 기능을 제어하는 시스템이다. (O/X) [★★★ 워크북 응용]", "a": "O (조절계 및 통신계 기능 담당)"},
+    {"q": "★★★ 폐렴 진단을 받은 환자에게서 가장 우선적으로 파악해야 할 원인 물질은? [교재]", "a": "원인균(세균, 바이러스 등 미생물)"},
+    {"q": "★★★ 구 기출문제(2015~2019)에 자주 출제되었던 '천식'이나 '뇌졸중'은 최신 개편된 3강 호흡기계/신경계 범위에 상세히 포함되어 있다. (O/X) [통합출제원칙]", "a": "X (현재 제공된 교재 범위에서는 해당 질환의 세부 병태생리가 삭제/제외됨)"}
+        ];
+
+        let cur = 0;
+        const qEl = document.getElementById('question');
+        const aEl = document.getElementById('answer');
+        const curEl = document.getElementById('current');
+        const totEl = document.getElementById('total');
+
+        function updateCard() {
+            qEl.textContent = cards[cur].q;
+            aEl.textContent = cards[cur].a;
+            curEl.textContent = cur + 1;
+            totEl.textContent = cards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function nextCard() { cur = (cur + 1) % cards.length; updateCard(); }
+        function prevCard() { cur = (cur - 1 + cards.length) % cards.length; updateCard(); }
+
+        // 초기 실행
+        updateCard();
+    </script>
+</body>
+</html>
