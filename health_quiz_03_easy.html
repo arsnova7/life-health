@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [3강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제3강: 호흡기계 건강관리 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "하", "q": "호흡기계의 구조 중 '상기도'에 속하지 않는 것은? [강의/교재]",
+      "o": ["비강", "인두", "후두", "폐포(허파꽈리)"],
+      "a": 3,
+      "h": "폐포는 가스교환이 일어나는 가장 깊숙한 하부기도의 구조물입니다.",
+      "e": "상기도는 비강, 인두, 후두까지이며, 기관, 기관지, 세기관지, 폐포는 하부기도에 속합니다."
+    },
+    {
+      "level": "하",
+      "q": "폐(Lung)의 해부학적 구조에 대한 설명으로 올바른 것은? [강의/교재]",
+      "o": ["우폐는 2엽, 좌폐는 3엽으로 이루어져 있다.", "우폐는 3엽, 좌폐는 2엽으로 이루어져 있다.", "우폐와 좌폐 모두 3엽으로 동일하게 이루어져 있다.", "폐는 전혀 분절되지 않은 하나의 커다란 덩어리이다."],
+      "a": 1,
+      "h": "심장이 왼쪽에 치우쳐 있어 왼쪽 폐의 공간이 조금 더 작습니다.",
+      "e": "우폐는 3개의 엽(lobe)으로, 좌폐는 심장이 위치한 공간 때문에 2개의 엽으로 구성되어 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "비강(코) 내부의 점막과 솜털이 공기를 들이마실 때 수행하는 기능이 아닌 것은? [강의/교재]",
+      "o": ["이물질 제거 (필터링)", "공기의 습도 조절 (가습)", "공기의 온도 조절 (가온)", "혈액 내 이산화탄소 배출"],
+      "a": 3,
+      "h": "가스 교환(산소와 이산화탄소)은 코가 아니라 폐 깊숙한 곳에서 일어납니다.",
+      "e": "혈액과 공기 사이의 가스 교환은 하부기도의 가장 끝인 폐포(허파꽈리)에서 모세혈관을 통해 일어납니다."
+    },
+    {
+      "level": "하",
+      "q": "급성후두염의 주요 증상과 악화 요인으로 적절하지 않은 것은? [교재]",
+      "o": ["발열, 근육통 등의 전신 증상이 나타날 수 있다.", "후두에 이물감이나 통증이 있어 목소리 변화가 온다.", "따뜻하고 습한 바람을 쐬면 증상이 급격히 악화된다.", "방치 시 후두 부종으로 인한 호흡곤란이 올 수 있다."],
+      "a": 2,
+      "h": "후두염은 '차고 건조한' 공기에 의해 자극받고 악화됩니다.",
+      "e": "급성후두염의 증상은 차고 건조한 바람, 찬 공기나 찬 음료에 의해 악화되는 양상을 보입니다."
+    },
+    {
+      "level": "하",
+      "q": "1882년 결핵균을 최초로 발견하여 세상에 알린 독일의 세균학자는 누구인가? [강의/교재]",
+      "o": ["로버트 코흐", "루이 파스퇴르", "알렉산더 플레밍", "에드워드 제너"],
+      "a": 0,
+      "h": "강의 서두에 등장하는 인류 역사의 중요한 학자입니다.",
+      "e": "결핵의 병원체인 결핵균은 1882년 로버트 코흐(Robert Koch)에 의해 발견되었습니다."
+    },
+    {
+      "level": "하",
+      "q": "결핵의 전파 경로에 대한 설명으로 옳은 것은? [★★★ 워크북]",
+      "o": ["오염된 물이나 음식물을 섭취하여 수인성으로 감염된다.", "오염된 주삿바늘이나 수혈을 통해 혈액으로 감염된다.", "환자의 미세한 침방울 혹은 비말핵에 의해 직접 감염된다.", "모기나 진드기 등 매개 곤충을 통해 감염된다."],
+      "a": 2,
+      "h": "결핵은 공기 중으로 떠다니는 입자를 들이마셔 감염되는 호흡기 전염병입니다.",
+      "e": "워크북 핵심 개념. 결핵은 환자의 기침 등을 통해 배출된 침방울이나 수분이 증발한 '비말핵'에 의해 호흡기로 감염됩니다."
+    },
+    {
+      "level": "하",
+      "q": "올바른 기침 예절로 교재와 강의에서 가장 권장하는 방법은 무엇인가? [강의/교재]",
+      "o": ["기침이 나올 때는 맨손으로 입을 단단히 틀어막는다.", "주변 사람을 향하지 않게 고개만 돌려 허공에 기침한다.", "휴지나 손수건이 없다면 옷소매나 팔꿈치 안쪽으로 입을 가리고 기침한다.", "기침 후에는 손을 씻지 않고 알코올로 입 주변만 닦는다."],
+      "a": 2,
+      "h": "손으로 가리면 손에 묻은 균이 다른 곳으로 옮겨갈 위험이 매우 큽니다.",
+      "e": "손으로 가릴 경우 손을 통해 교차 감염이 일어날 수 있으므로 옷소매(팔꿈치 안쪽)로 가리는 것이 국제적인 표준 예절입니다."
+    },
+    {
+      "level": "하",
+      "q": "결핵을 예방하기 위해 인체에 면역을 생성해 주는 예방접종 백신의 이름은? [2015년 기출/★★★ 워크북]",
+      "o": ["DPT 백신", "BCG (비시지) 백신", "HPV 백신", "MMR 백신"],
+      "a": 1,
+      "h": "주로 영유아기에 어깨에 맞는 이른바 '불주사'의 성분입니다.",
+      "e": "2015년 기출 및 워크북 핵심. 결핵 예방을 위해 맞는 백신은 비시지(BCG)입니다."
+    },
+    {
+      "level": "하",
+      "q": "인체에서 가장 복잡한 구조를 지닌 체계로, 주로 인체의 '조절계 및 통신계' 기능을 담당하는 곳은? [★★★ 워크북]",
+      "o": ["호흡기계", "소화기계", "신경계", "내분비계"],
+      "a": 2,
+      "h": "뇌와 척수, 그리고 온몸으로 뻗어있는 신경망을 포함합니다.",
+      "e": "워크북 신경계 1장 핵심. 신경계는 가장 복잡한 구조로 신체의 조절과 통신을 담당합니다."
+    },
+    {
+      "level": "하",
+      "q": "결핵 치료의 핵심 방법으로 가장 올바른 것은? [★★★ 워크북]",
+      "o": ["초기에 강력한 방사선 치료를 1회 실시한다.", "폐의 감염된 부위를 외과적으로 절제하는 수술을 한다.", "6~12개월 동안 항결핵제 약물을 꾸준히 복용한다.", "자연 치유되도록 맑은 공기가 있는 산속에서 요양만 한다."],
+      "a": 2,
+      "h": "결핵은 반드시 '장기간의 약물치료'가 필요한 질환입니다.",
+      "e": "결핵은 단기 치료가 불가능하며, 6~12개월간의 규칙적이고 꾸준한 복합 약물치료가 필수적입니다."
+    },
+    {
+      "level": "하",
+      "q": "다음 중 비감염성 폐렴을 일으키는 원인으로 볼 수 있는 것은? [강의/교재]",
+      "o": ["폐렴구균 감염", "화학물질 흡입 및 방사선 치료", "결핵균 침투", "독감 바이러스 전파"],
+      "a": 1,
+      "h": "세균이나 미생물이 아닌 물리적, 화학적 자극에 의한 것입니다.",
+      "e": "폐렴은 세균, 바이러스 등 감염성 원인 외에도 화학물질, 방사선 등 비감염성 자극에 의해서도 발생할 수 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "결핵 환자의 임상 증상 중, 특히 수면 중에 흔히 나타나는 전형적인 특징은? [★★★ 워크북/강의]",
+      "o": ["심한 코골이와 수면무호흡증", "수면 중 지속적인 고열과 경련", "밤에 식은땀을 많이 흘림", "자다가 갑작스러운 구토 발생"],
+      "a": 2,
+      "h": "결핵은 오후 미열과 함께 야간에 땀이 흠뻑 나는 것이 특징입니다.",
+      "e": "워크북 핵심 증상. 결핵 환자는 오후 미열과 함께 밤에 땀을 많이 흘리는(night sweats) 전형적인 증상을 보입니다."
+    },
+    {
+      "level": "하",
+      "q": "우리나라 2018년 결핵 신(新)환자 통계에 대한 설명으로 옳은 것은? [강의록]",
+      "o": ["여성 환자가 남성 환자보다 훨씬 많다.", "가장 환자가 많이 발생하는 연령대는 10대이다.", "전체 환자의 약 19.2%를 80대 이상이 차지하며 가장 비중이 높다.", "결핵 발병률이 OECD 국가 중 가장 낮아 퇴치 직전 단계이다."],
+      "a": 2,
+      "h": "한국은 OECD 결핵 발생률 1위이며, 고령층과 남성에게서 높게 나타납니다.",
+      "e": "강의록 통계. 남성(1.38배)이 여성보다 많고, 80대 이상의 비중이 제일 높으며, OECD 중 발생률이 가장 높습니다."
+    },
+    {
+      "level": "하",
+      "q": "신경계를 해부학적으로 크게 두 가지로 분류할 때 올바른 것은? [★★★ 워크북]",
+      "o": ["교감신경계와 부교감신경계", "중추신경계와 말초신경계", "뇌신경계와 척수신경계", "체성신경계와 자율신경계"],
+      "a": 1,
+      "h": "가장 큰 틀에서의 상위 분류 체계를 묻는 것입니다.",
+      "e": "워크북 핵심 개념. 신경계는 해부학적으로 중추신경계(CNS)와 말초신경계(PNS)로 대분류됩니다."
+    },
+    {
+      "level": "하",
+      "q": "호흡 과정을 세분화할 때, 폐포(허파꽈리)와 모세혈관 사이에서 산소와 이산화탄소가 교환되는 과정을 무엇이라 부르는가? [강의/교재]",
+      "o": ["내호흡", "세포 호흡", "외호흡", "혐기성 호흡"],
+      "a": 2,
+      "h": "허파 내부에서 외부 공기와 혈액이 만나는 호흡입니다.",
+      "e": "호흡기가 외부 공기를 받아들여 혈액과 가스 교환을 하는 것을 외호흡(허파 호흡)이라 합니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+        isAnswered = true;
+        
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            btn.classList.add('correct');
+            score++;
+        } else {
+            btn.classList.add('wrong');
+            allBtns[q.a].classList.add('correct');
+            wrongIndices.push(curIdx + 1);
+            document.getElementById('hint-text').innerText = q.h;
+            document.getElementById('hint-box').style.display = 'block';
+        }
+        
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

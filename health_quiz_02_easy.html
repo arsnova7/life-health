@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [2강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제2강: 심혈관계, 소화기계 건강관리 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 오타 수정 및 데이터 15문항 전체 복원 완료
+    const quizData = [
+        {"level": "하", "q": "심뇌혈관계 해부생리에 대한 설명으로 올바른 것은?",
+      "o": [
+        "심장은 1개의 방과 1개의 실로 구성되어 있다.",
+        "심장은 일생 동안 쉬지 않고 스스로 움직이는 근육성 펌프이다.",
+        "우심실에서 나온 혈액은 전신으로 직행한다.",
+        "혈액은 정맥에서 동맥으로 흐르는 것이 기본이다."
+      ],
+      "a": 1,
+      "h": "심장은 2방 2실 구조이며 평생 펌프질을 합니다.",
+      "e": "심장의 기본 정의를 묻는 문제입니다. 심장은 자발적으로 수축하는 근육 펌프입니다."
+    },
+    {
+      "level": "하",
+      "q": "혈압을 측정할 때, 심장이 수축하여 혈액을 뿜어낼 때 혈관벽에 부딪히며 생기는 최고 압력을 무엇이라 하는가? [2019년 기출]",
+      "o": [
+        "이완기 혈압",
+        "수축기 혈압",
+        "동맥경화압",
+        "문맥압"
+      ],
+      "a": 1,
+      "h": "심장이 '수축'할 때 생기는 압력입니다.",
+      "e": "2019년 기출. 심장 수축 시 발생하여 가장 높게 나타나는 수축기 혈압의 정의입니다."
+    },
+    {
+      "level": "하",
+      "q": "심뇌혈관질환의 발생 위험이 가장 낮은 '정상혈압'의 기준으로 올바른 것은?",
+      "o": [
+        "수축기 140 미만 / 이완기 90 미만",
+        "수축기 130 미만 / 이완기 85 미만",
+        "수축기 120 미만 / 이완기 80 미만",
+        "수축기 150 미만 / 이완기 100 미만"
+      ],
+      "a": 2,
+      "h": "120에 80 미만일 때를 이상적인 정상혈압으로 봅니다.",
+      "e": "새 교재의 혈압 진단 기준표에 명시된 정상혈압(120/80 미만) 수치입니다."
+    },
+    {
+      "level": "하",
+      "q": "고혈압 환자의 약 90~95%를 차지하며, 특별한 질환 없이 유전, 식습관, 스트레스 등으로 발생하는 고혈압은 무엇인가? [2015년 기출]",
+      "o": [
+        "속발성 고혈압",
+        "이차성 고혈압",
+        "본태성 고혈압",
+        "악성 고혈압"
+      ],
+      "a": 2,
+      "h": "원인을 명확히 알 수 없는 일차성 고혈압을 뜻하는 용어입니다.",
+      "e": "2015년 기출. 본태성(일차성) 고혈압의 비율과 정의를 묻는 문제입니다."
+    },
+    {
+      "level": "하",
+      "q": "고혈압의 관리 방법으로 적절하지 않은 것은? [2016년 기출]",
+      "o": [
+        "규칙적인 운동을 한다.",
+        "처방받은 혈압약은 혈압이 정상일 때만 임의로 끊는다.",
+        "콜레스테롤과 염분이 적은 음식을 섭취한다.",
+        "정상 체중을 유지한다."
+      ],
+      "a": 1,
+      "h": "고혈압 약은 임의로 복용을 중단하면 위험합니다.",
+      "e": "2016년 기출. 혈압약은 의사 지시 없이 임의로 중단해서는 안 된다는 핵심 관리법입니다."
+    },
+    {
+      "level": "하",
+      "q": "심장근육에 산소와 영양분을 공급하는 전용 혈관의 이름은? [2018년 기출]",
+      "o": [
+        "대동맥",
+        "폐동맥",
+        "경동맥",
+        "관상동맥"
+      ],
+      "a": 3,
+      "h": "심장(冠) 모양으로 둘러싸고 있는 동맥입니다.",
+      "e": "2018년 기출. 허혈성 심질환의 무대가 되는 관상동맥의 명칭을 묻는 문제입니다."
+    },
+    {
+      "level": "하",
+      "q": "심근에 일시적으로 혈액공급이 부족하여 흉통이 발생하나, 휴식을 취하거나 니트로글리세린을 복용하면 증상이 완화되는 질환은? [2017년 기출]",
+      "o": [
+        "심근경색증",
+        "협심증",
+        "심부전",
+        "동맥경화증"
+      ],
+      "a": 1,
+      "h": "일시적 허혈 상태로 괴사까지는 진행되지 않은 상태입니다.",
+      "e": "2017년 기출. 협심증과 심근경색증을 구분하는 가장 기본적인 특징입니다."
+    },
+    {
+      "level": "하",
+      "q": "인체에서 가장 큰 선(gland) 조직으로, 오른쪽 늑골 바로 밑에 위치한 장기는?",
+      "o": [
+        "위",
+        "췌장",
+        "간",
+        "비장"
+      ],
+      "a": 2,
+      "h": "해독과 대사의 중심 역할을 하는 장기입니다.",
+      "e": "간의 해부학적 위치와 크기에 대한 기본 지식 문제입니다."
+    },
+    {
+      "level": "하",
+      "q": "위와 소장을 거쳐 내려온 음식물 찌꺼기에서 주로 '수분'과 '전해질'을 흡수하여 대변을 형성하는 소화기관은? [2019년 기출]",
+      "o": [
+        "식도",
+        "위",
+        "십이지장",
+        "대장"
+      ],
+      "a": 3,
+      "h": "소화관의 마지막 관문입니다.",
+      "e": "2019년 기출. 대장의 주된 생리적 기능(수분 흡수)을 묻는 문제입니다."
+    },
+    {
+      "level": "하",
+      "q": "혈액 내 과도한 포도당을 '글리코겐' 형태로 저장하여 혈당 밸런스를 조절하는 장기는? [2017년 기출]",
+      "o": [
+        "담낭",
+        "간",
+        "소장",
+        "대장"
+      ],
+      "a": 1,
+      "h": "포도당 대사 작용을 수행하는 소화기계 기관입니다.",
+      "e": "2017년 기출. 간의 여러 주요 기능 중 당 대사에 대한 질문입니다."
+    },
+    {
+      "level": "하",
+      "q": "만성위염, 소화성 궤양, 위암의 강력한 유발 원인으로 알려진 위장 내 세균은? [2019년 기출]",
+      "o": [
+        "대장균",
+        "비브리오균",
+        "헬리코박터 파일로리균",
+        "살모넬라균"
+      ],
+      "a": 2,
+      "h": "위산 속에서도 살아남는 세균입니다.",
+      "e": "2019년 기출. 위장관 질환의 주요 병원체인 헬리코박터균을 묻는 문제입니다."
+    },
+    {
+      "level": "하",
+      "q": "소화성 궤양이 위장관 중 가장 흔하게 잘 발생하는 부위는 어디인가? [2017년 기출]",
+      "o": [
+        "식도",
+        "위",
+        "십이지장",
+        "대장"
+      ],
+      "a": 2,
+      "h": "위에서 소장으로 넘어가는 바로 첫 번째 부위입니다.",
+      "e": "2017년 기출. 소화성 궤양이 위보다 십이지장에 더 잘 생긴다는 교재 내용을 묻습니다."
+    },
+    {
+      "level": "하",
+      "q": "알코올, 약물, 각종 독성물질을 불활성화시켜 인체를 보호하는 '해독작용'을 담당하는 기관은? [2018년 기출]",
+      "o": [
+        "위",
+        "간",
+        "췌장",
+        "맹장"
+      ],
+      "a": 1,
+      "h": "술을 많이 마시면 이 장기가 가장 힘들어합니다.",
+      "e": "2018년 기출. 간의 대표적인 기능인 화학물질 해독작용을 묻는 문제입니다."
+    },
+    {
+      "level": "하",
+      "q": "오염된 물이나 음식물을 섭취하여 분변-구강 경로로 전파되며, 집단 발병의 원인이 되기 쉬운 간염 바이러스는? [2017년 기출]",
+      "o": [
+        "A형 간염",
+        "B형 간염",
+        "C형 간염",
+        "D형 간염"
+      ],
+      "a": 0,
+      "h": "위생 상태와 관련이 깊은 급성 수인성 간염입니다.",
+      "e": "2017년 기출. A형 간염의 전파 경로 특징을 묻는 문제입니다."
+    },
+    {
+      "level": "하",
+      "q": "간경화증(간경변증)을 유발하는 가장 주요한 원인으로 교재에서 지적하고 있는 것은? [2018년 기출]",
+      "o": [
+        "과도한 수분 섭취",
+        "매운 음식 섭취",
+        "알코올 섭취",
+        "단백질 부족"
+      ],
+      "a": 2,
+      "h": "간 조직을 딱딱하게 굳게 만드는 주된 생활습관입니다.",
+      "e": "2018년 기출. 간경화증의 1차적 유발 요인이 알코올임을 묻는 문제입니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+        isAnswered = true;
+        
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            btn.classList.add('correct');
+            score++;
+        } else {
+            btn.classList.add('wrong');
+            allBtns[q.a].classList.add('correct');
+            wrongIndices.push(curIdx + 1);
+            document.getElementById('hint-text').innerText = q.h;
+            document.getElementById('hint-box').style.display = 'block';
+        }
+        
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

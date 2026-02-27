@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [1강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제1강: 건강의 이해 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 오타 수정 및 데이터 15문항 전체 복원 완료
+    const quizData = [
+        {"level": "하", "q": "세계보건기구(WHO)가 헌장 전문에 명시한 '건강'의 개념으로 가장 적절한 것은? [교재]", "o": ["질병이 없거나 허약하지 않은 신체적 상태", "신체적, 정신적, 사회적으로 완전한 안녕상태", "질병 발견 전의 잠재적 무증상 상태", "스트레스가 전혀 없는 심리적 안정 상태"], "a": 1, "h": "WHO는 건강을 단순한 신체적 차원을 넘어 포괄적이고 총체적으로 정의했습니다.", "e": "세계보건기구(WHO)는 건강을 신체적, 정신적, 사회적 안녕상태로 정의하여 총체적 관점을 확립했습니다. "},
+        {"level": "하", "q": "건강을 질병이 없는 상태라고 보는 이분법적 건강관을 제시한 17세기의 우주관은? [교재]", "o": ["유기체론적 우주관", "기계론적 우주관", "생태학적 우주관", "총체론적 우주관"], "a": 1, "h": "데카르트의 철학에 기반하여 인체를 기계로 보는 관점입니다.", "e": "17세기 데카르트의 기계론적 우주관은 건강과 질병을 이분법적으로 구분하는 계기가 되었습니다. [cite: 406]"},
+        {"level": "하", "q": "환경요인과 생활양식 요인을 효과적으로 관리하는 것이 건강관리의 핵심이라고 주장하며 건강증진의 새로운 전략을 제안한 보고서는? [교재]", "o": ["오타와 헌장", "WHO 헌장", "라론드(Lalonde) 보고서", "국민건강증진계획"], "a": 2, "h": "1974년 캐나다 보건부 장관의 이름을 딴 보고서입니다.", "e": "라론드 보고서는 생활양식과 환경이 건강에 미치는 영향을 강조하며 건강증진의 개념을 대두시켰습니다. [cite: 407]"},
+        {"level": "하", "q": "건강한 개인이 신체적, 정신적 기능을 최대한 발휘할 수 있도록 하여 질병의 발생을 사전에 차단하는 예방 단계는? [★★★ 워크북]", "o": ["1차 예방", "2차 예방", "3차 예방", "4차 예방"], "a": 0, "h": "가장 이상적인 차원의 예방으로, 원인에 노출되지 않도록 하는 활동입니다.", "e": "질병 발생을 사전에 차단하는 활동은 1차 예방입니다. [cite: 409]"},
+        {"level": "하", "q": "자전거 타는 어린이에게 헬멧을 착용하도록 하는 행위는 질병예방 단계 중 어디에 해당하는가? [2016년 기출/교재]", "o": ["1차 예방", "2차 예방", "3차 예방", "4차 예방"], "a": 0, "h": "사고(질병)가 발생하기 전 사전에 방지하는 조치입니다.", "e": "헬멧, 안전벨트 착용은 상해를 미연에 방지하는 1차 예방행위입니다. [cite: 410]"},
+        {"level": "하", "q": "혈당 체크 및 자궁경부암 검사를 실천하는 행위는 질병예방 단계 중 어디에 해당하는가? [★★★ 워크북/2015년 기출]", "o": ["1차 예방", "2차 예방", "3차 예방", "4차 예방"], "a": 1, "h": "증상이 나타나기 전 '조기 발견'을 목적으로 하는 활동입니다.", "e": "검진을 통한 질병의 조기 발견과 조기 치료는 2차 예방에 속합니다. [cite: 412]"},
+        {"level": "하", "q": "뇌졸중이나 심장 질환 환자를 대상으로 기능 수준을 유지해 정상 사회생활 복귀를 촉진하는 재활 프로그램은 몇 차 예방인가? [교재]", "o": ["1차 예방", "2차 예방", "3차 예방", "4차 예방"], "a": 2, "h": "질병이 이미 발생하고 장애가 남았을 때의 관리 단계입니다.", "e": "사회 복귀와 기능 유지를 돕는 재활은 3차 예방입니다. [cite: 413]"},
+        {"level": "하", "q": "건강정보의 질을 평가할 때 '정보이용에 대한 부작용이나 주의사항을 제시하고 있는지'를 판단하는 기준은? [2015년 기출/교재]", "o": ["적절성", "현시성", "경고성", "편의성"], "a": 2, "h": "사용자에게 위험할 수 있는 요소를 미리 알리는 것입니다.", "e": "주의사항과 부작용 안내 여부를 평가하는 기준은 '경고성'입니다. [cite: 414]"},
+        {"level": "하", "q": "건강정보의 질을 평가할 때 '건강정보의 내용이 자신의 수준에 적절한지'를 판단하는 기준은? [2016년 기출/교재]", "o": ["유익성", "충분성", "현시성", "적절성"], "a": 3, "h": "자신의 지식 수준이나 상황에 '알맞은지'를 묻는 기준입니다.", "e": "자신의 수준과 상황에 맞는지를 판단하는 기준은 '적절성'입니다. [cite: 415]"},
+        {"level": "하", "q": "건강정보가 시기적절하며 일반인들의 최신 실정에 맞는지를 평가하는 기준은? [2019년 기출/교재]", "o": ["적절성", "현시성", "경고성", "유익성"], "a": 1, "h": "과거의 낡은 정보가 아닌 '현재' 상황에 부합하는지 봅니다.", "e": "정보의 최신성과 시대적 타이밍을 평가하는 것은 '현시성'입니다. [cite: 416]"},
+        {"level": "하", "q": "가장 정확하고 바람직한 건강정보를 획득할 수 있는 출처로 교재에서 첫 번째로 꼽는 것은? [교재]", "o": ["개인 블로그", "보건소나 병원의 의료인", "대중매체(TV, 라디오)", "주변 지인"], "a": 1, "h": "전문적인 의학 지식을 갖춘 전문가와 직접 대면하는 방식입니다.", "e": "보건소나 병원의 의사, 간호사 등으로부터 얻는 정보가 가장 정확하고 바람직합니다. [cite: 417]"},
+        {"level": "하", "q": "우리나라의 범정부적 보건정책으로, 온 국민이 함께 만들고 누리는 건강세상을 비전으로 삼는 종합계획의 약칭은? [교재]", "o": ["WHO", "CDC", "HP (Health Plan)", "NHIS"], "a": 2, "h": "국민건강증진종합계획을 영문으로 줄인 말입니다.", "e": "국민건강증진종합계획(HP)은 5년마다 수립되는 국가 보건의 핵심 정책입니다. "},
+        {"level": "하", "q": "질병예방행위 중 B형 간염 예방을 위해 술잔을 돌리는 음주문화를 자제하는 캠페인은 몇 차 예방인가? [2018년 기출/교재]", "o": ["1차 예방", "2차 예방", "3차 예방", "예방에 해당하지 않음"], "a": 0, "h": "감염원에 노출되는 것 자체를 미리 막는 행위입니다.", "e": "병인에 노출되지 않도록 생활문화를 바꾸어 사전에 차단하는 것은 1차 예방입니다. [cite: 419]"},
+        {"level": "하", "q": "인간의 건강을 최초로 신체, 정신, 환경의 상호연관성이라는 '총체적 관점'에서 바라본 인물은? [교재]", "o": ["데카르트", "히포크라테스", "라론드", "던"], "a": 1, "h": "고대 그리스의 의학자로 서양 의학의 뼈대를 이루었습니다.", "e": "히포크라테스는 신체, 정신, 환경의 관계를 총체적으로 파악했습니다. [cite: 420]"},
+        {"level": "하", "q": "대중매체를 통한 건강정보 획득의 특징으로 옳지 않은 것은? [교재]", "o": ["접근이 쉽고 편리하다.", "매우 다양한 정보를 얻을 수 있다.", "익명성으로 인해 비과학적인 정보가 유통될 우려가 있다.", "모든 정보가 엄격하게 평가되어 오류가 전혀 없다."],
+        "a": 3, "h": "인터넷이나 방송 정보는 전문가의 필터링을 거치지 않은 경우도 많습니다.", "e": "대중매체 정보는 엄격한 평가 없이 제공될 수 있어 검증되지 않은 민간요법 등에 주의해야 합니다. [cite: 421]"}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+        isAnswered = true;
+        
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            btn.classList.add('correct');
+            score++;
+        } else {
+            btn.classList.add('wrong');
+            allBtns[q.a].classList.add('correct');
+            wrongIndices.push(curIdx + 1);
+            document.getElementById('hint-text').innerText = q.h;
+            document.getElementById('hint-box').style.display = 'block';
+        }
+        
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>
