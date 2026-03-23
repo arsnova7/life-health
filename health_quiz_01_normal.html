@@ -182,6 +182,7 @@
 
     function loadQuestion() {
         isAnswered = false;
+        wrongCount = 0;
         const q = quizData[curIdx];
         document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
         document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
@@ -201,27 +202,40 @@
         document.getElementById('next-btn').style.display = 'none';
     }
 
+    let wrongCount = 0;
+
     function checkAnswer(idx, btn) {
         if (isAnswered) return;
-        isAnswered = true;
-        
+
         const q = quizData[curIdx];
         const allBtns = document.querySelectorAll('.option-btn');
-        
+
         if (idx === q.a) {
+            isAnswered = true;
             btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
             score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
         } else {
+            wrongCount++;
             btn.classList.add('wrong');
-            allBtns[q.a].classList.add('correct');
-            wrongIndices.push(curIdx + 1);
-            document.getElementById('hint-text').innerText = q.h;
-            document.getElementById('hint-box').style.display = 'block';
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
         }
-        
-        document.getElementById('exp-text').innerText = q.e;
-        document.getElementById('exp-box').style.display = 'block';
-        document.getElementById('next-btn').style.display = 'block';
     }
 
     function nextQuestion() {

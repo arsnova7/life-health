@@ -20,6 +20,8 @@
     .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
     .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
     .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
     .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
     .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
 </style>
@@ -48,8 +50,8 @@
             <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
             <div class="wrong-list" id="wrong-numbers"></div>
         </div>
-        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
-        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
     </div>
 </div>
 
@@ -183,6 +185,7 @@
 
     function loadQuestion() {
         isAnswered = false;
+        wrongCount = 0;
         const q = quizData[curIdx];
         document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
         document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
@@ -202,27 +205,44 @@
         document.getElementById('next-btn').style.display = 'none';
     }
 
+    let wrongCount = 0;
+
     function checkAnswer(idx, btn) {
         if (isAnswered) return;
-        isAnswered = true;
-        
+
         const q = quizData[curIdx];
         const allBtns = document.querySelectorAll('.option-btn');
-        
+
         if (idx === q.a) {
+            // 정답
+            isAnswered = true;
             btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
             score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
         } else {
+            // 오답
+            wrongCount++;
             btn.classList.add('wrong');
-            allBtns[q.a].classList.add('correct');
-            wrongIndices.push(curIdx + 1);
-            document.getElementById('hint-text').innerText = q.h;
-            document.getElementById('hint-box').style.display = 'block';
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
         }
-        
-        document.getElementById('exp-text').innerText = q.e;
-        document.getElementById('exp-box').style.display = 'block';
-        document.getElementById('next-btn').style.display = 'block';
     }
 
     function nextQuestion() {
