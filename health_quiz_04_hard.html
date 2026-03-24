@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [4강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제4강: 신경계 건강관리 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "다음 중 긴장성 두통과 편두통의 임상적 특성을 올바르게 비교한 것을 모두 고르면? [2019년 기출 복합]\n가. 긴장성 두통은 양측성으로 목 뒤나 머리 전체가 조이는 느낌이다.\n나. 편두통은 4~72시간 동안 지속될 수 있는 심한 발작적 통증이다.\n다. 편두통은 일상활동(계단 오르기 등)에 의해 통증이 악화된다.\n라. 긴장성 두통은 빛이나 소리에 극도로 예민해져 구토를 유발한다.",
+      "o": ["가, 나", "다, 라", "가, 나, 다", "가, 나, 다, 라"],
+      "a": 2,
+      "h": "빛과 소리에 예민하고 구토를 동반하는 것은 '편두통'의 특징입니다.",
+      "e": "기출문제 변형. 라(빛/소리 예민, 오심/구토)는 편두통의 특징이며, 긴장성 두통은 보통 위장관 증상이나 빛/소리 민감증이 없습니다."
+    },
+    {
+      "level": "상",
+      "q": "뇌졸중(Stroke)의 종류와 병태생리에 대한 연결이 가장 정확한 것은? [2015년 기출/교재 심화]",
+      "o": ["뇌경색 - 심장 등에서 날아온 핏덩어리(색전)나 동맥경화 혈전이 뇌혈관을 꽉 막아 뇌조직이 괴사됨", "뇌경색 - 고혈압으로 인해 약해진 뇌혈관 벽이 압력을 견디지 못하고 찢어져 출혈이 발생함", "뇌출혈 - 세로토닌 과다 분비로 뇌혈관이 확장되어 뇌척수액이 혈관 밖으로 빠져나감", "뇌출혈 - 니코틴이 뇌혈관을 막아 신경근에 방사통을 일으킴"],
+      "a": 0,
+      "h": "경색(Infarction)은 '막혀서 썩음', 출혈(Hemorrhage)은 '터져서 피가 남'을 뜻합니다.",
+      "e": "뇌경색은 혈전/색전에 의해 혈관이 막히는 것이며, 고혈압으로 터지는 것은 뇌출혈입니다."
+    },
+    {
+      "level": "상",
+      "q": "요추부 수핵탈출증 환자에게 나타나는 '방사통(Radiating pain)'의 생리학적 기전으로 가장 올바른 추론은? [강의 응용]",
+      "o": ["돌출된 수핵이 뇌로 가는 혈관을 막아 뇌의 통증 중추를 직접 자극하기 때문이다.", "터져 나온 수핵이 척수에서 뻗어 나가는 신경근(좌골신경 등)을 물리적으로 압박하고 염증을 일으켜, 그 신경이 지배하는 엉덩이와 다리 부위에 통증을 유발하기 때문이다.", "수핵 내의 젤라틴 성분이 혈관을 타고 다리로 내려가 혈관을 부풀리기 때문이다.", "다리의 근육이 피로해져서 허리 쪽으로 거꾸로 통증 신호를 보내기 때문이다."],
+      "a": 1,
+      "h": "요추에서 다리로 내려가는 신경이 허리 부위에서 꽉 눌리기 때문에 발생합니다.",
+      "e": "방사통은 척추에서 이탈한 수핵이 다리로 이어지는 좌골신경 등의 신경 뿌리(신경근)를 압박하여 신경 주행 경로를 따라 통증이 퍼지는 현상입니다."
+    },
+    {
+      "level": "상",
+      "q": "수핵탈출증 예방 및 관리를 위한 생활습관 교정 교육으로 올바르게 묶인 것은? [2016, 2019년 기출 융합]\n가. 무거운 물건을 들 때 무릎을 굽히고 다리 힘을 사용한다.\n나. 잠을 잘 때 허리나 무릎 밑에 타월을 말아 넣어 척추 만곡을 돕는다.\n다. 추간판 수분을 뺏는 니코틴을 피하기 위해 반드시 금연한다.\n라. 체중을 늘려 허리 관절의 안정성을 높인다.",
+      "o": ["가, 나", "다, 라", "가, 나, 다", "가, 나, 다, 라"],
+      "a": 2,
+      "h": "체중이 증가하면 요추에 가해지는 물리적 압박(하중)이 커져 디스크 위험이 폭증합니다.",
+      "e": "디스크 예방에는 체중 감량(허리 부하 감소), 올바른 자세(무릎 사용, 수면 지지), 금연(추간판 건조 방지)이 필수적입니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 적용 메타 검증 ★ 과거 기출문제(2015~2019) 파일에 다수 등장했던 다음의 건강 문제 중, [개편된 최신 4강 교재/워크북 - 신경계] 범위에 **명확히 포함되어 상세 병태생리가 설명된** 질환은 무엇인가?",
+      "o": ["알츠하이머 치매 (Alzheimer's dementia)", "수면장애 (불면증 및 수면무호흡증)", "수핵탈출증 (Herniated Nucleus Pulposus)", "알코올 중독 및 금단 섬망"],
+      "a": 2,
+      "h": "제공된 4강 교재 텍스트(신경계 건강문제)는 오직 두통, 수핵탈출증(디스크), 뇌졸중만을 다루고 있습니다.",
+      "e": "구 기출에는 수면장애, 중독, 치매 등 다양한 정신/신경계 문제가 섞여 있으나, 현재 개편된 4강 신체건강문제(신경계) 범위에서는 '두통, 수핵탈출증, 뇌졸중' 3가지만을 특정하여 다루고 있습니다."
+    },
+    {
+      "level": "상",
+      "q": "신경계의 해부생리학적 기능 중 '자율신경계(Autonomic Nervous System)'의 역할과 특징에 대한 설명으로 가장 적절한 것은? [강의 심화]",
+      "o": ["우리의 자유 의지에 따라 손과 발의 근육을 정밀하게 통제하는 신경계이다.", "대뇌 피질의 인지 기능과 직결되어 복잡한 수학 문제를 풀게 해준다.", "교감신경과 부교감신경으로 나뉘며, 위기 상황 대처나 휴식 시 소화 촉진 등 생존을 위한 내장 및 심장 기능을 무의식적으로 조절한다.", "혈액 내 적혈구와 백혈구를 직접 생성하여 면역력을 유지하는 기관이다."],
+      "a": 2,
+      "h": "Autonomic(자율)은 '스스로 알아서' 작동한다는 뜻으로 심장, 내장 등 의지대로 안 되는 곳에 분포합니다.",
+      "e": "자율신경계는 대뇌의 직접 통제를 받지 않고 생명 유지(심장박동, 소화, 호흡 등)를 위해 교감/부교감 신경이 길항작용을 하며 무의식적으로 조절하는 시스템입니다."
+    },
+    {
+      "level": "상",
+      "q": "대한뇌졸중학회의 \"이웃, 손, 발, 시선\" 캠페인이 시사하는 뇌졸중의 핵심 특징과 대응 원칙으로 올바른 추론은? [강의록 응용]",
+      "o": ["뇌졸중은 주로 이웃 사람에게 전염되므로 즉시 격리해야 함을 의미한다.", "손발이 차가워지는 것은 혈액순환 문제이므로 한의원에서 침을 맞는 것이 최우선임을 강조한다.", "편마비, 안면 마비(이~ 웃기), 시선 편위 등의 특징적 전조증상을 주변에서 빨리 캐치하여 골든타임 내에 병원으로 이송해야 함을 의미한다.", "시력이 급격히 좋아지는 현상이 발생하므로 안과 진료가 시급함을 알리는 것이다."],
+      "a": 2,
+      "h": "이(안면마비)-웃(웃어보세요)-손/발(마비 확인)-시선(눈 돌아감)을 약자로 만든 캠페인입니다.",
+      "e": "이웃(안면마비 확인), 손발(편마비 확인), 시선(눈동자 쏠림)은 뇌졸중의 대표적 급성 증상으로, 이를 빨리 발견하여 즉각 병원에 가야 한다는 '주변인의 조기 대처'를 강조한 캠페인입니다."
+    },
+    {
+      "level": "상",
+      "q": "편두통 발생 기전에서 '세로토닌(Serotonin)'의 역할과 뇌혈관의 변화 과정을 가장 올바르게 설명한 것은? [강의 심화]",
+      "o": ["세로토닌 대사 이상으로 인해 뇌혈관이 급격히 수축하여 피가 통하지 않아 허혈성 통증이 발생한다.", "혈중 세로토닌의 대사 이상으로 뇌혈관이 비정상적으로 확장되면서, 혈관 주변 신경을 자극하여 박동성 통증이 발생한다.", "세로토닌이 수핵을 건조하게 만들어 뇌신경이 눌리면서 두통이 발생한다.", "세로토닌이 혈액을 굳게 만들어 혈전을 생성하고 뇌경색을 유발하여 두통을 일으킨다."],
+      "a": 1,
+      "h": "두통 치료제 중 일부는 이 '확장된 혈관'을 다시 수축시켜 주는 약리 작용을 합니다.",
+      "e": "편두통은 세로토닌이라는 신경전달물질의 대사 이상으로 두개골 내외의 혈관이 과도하게 '확장'되어 주변 조직과 신경을 압박/자극함으로써 심한 박동성 두통을 유발합니다."
+    },
+    {
+      "level": "상",
+      "q": "뇌졸중 환자에게 '시간이 뇌다(Time is brain)'라고 강조하며 발병 후 즉각적인 응급실 이송(119)을 지시하는 병태생리학적 근거는? [강의 종합]",
+      "o": ["시간이 지나면 뇌출혈이 뇌경색으로 자연 치유되기 때문에", "뇌세포는 산소와 영양분 공급이 수 분만 중단되어도 비가역적(되돌릴 수 없는) 사멸이 일어나 영구적인 신경학적 장애가 남기 때문에", "늦게 가면 구급차 비용이 기하급수적으로 비싸지기 때문에", "뇌의 통증 수용체가 1시간이 지나면 마비되어 환자가 고통을 느끼지 못하게 되기 때문에"],
+      "a": 1,
+      "h": "뇌세포는 우리 몸에서 산소 결핍에 가장 취약한 조직으로, 한 번 죽으면 재생되지 않습니다.",
+      "e": "뇌혈관이 막히거나 터져 산소/혈액 공급이 끊기면 뇌세포는 불과 몇 분 안에 파괴되기 시작하며, 죽은 뇌세포는 재생되지 않아 반신마비, 언어장애 등 영구적 후유증을 남기므로 초급성기 치료(골든타임)가 절대적입니다."
+    },
+    {
+      "level": "상",
+      "q": "다음 중 '긴장성 두통' 환자에게 제공할 수 있는 가장 적절한 간호 중재 및 교육 내용으로 묶인 것은? [교재 응용]",
+      "o": ["빛과 소리에 예민하므로 반드시 암실에 72시간 격리하고 강력한 마약성 진통제를 투여한다.", "원인이 되는 목과 어깨 근육의 긴장을 풀기 위해 찜질과 마사지를 적용하고 스트레스 관리법을 교육한다.", "뇌종양의 전조증상이 확실하므로 즉각적인 개두술(머리뼈 여는 수술)을 준비시킨다.", "혈관이 과도하게 확장된 상태이므로 머리에 차가운 얼음물을 부어 혈관을 수축시킨다."],
+      "a": 1,
+      "h": "가장 흔하고, 근육 뭉침과 피로가 원인인 가벼운 두통입니다.",
+      "e": "긴장성 두통은 뒷목 등의 근육 수축과 스트레스가 주원인이므로, 근육 이완(마사지, 온찜질)과 휴식, 규칙적 생활습관 교육이 가장 효과적인 1차 중재입니다."
+}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [13강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제13강: 응급처치 2 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "중", "q": "코피(비출혈)를 효과적으로 지혈하기 위한 구체적 방법 중 임상적으로 가장 타당한 것은? [교재/강의]",
+      "o": [
+        "환자의 코를 솜으로 꽉 막은 후 목덜미를 손날로 강하게 두드린다.",
+        "입으로 숨을 쉬게 하고, 엄지와 검지를 이용해 코뼈 바로 밑의 부드러운 콧방울 부위를 10분 정도 꽉 쥐어준다.",
+        "코피가 멈출 때까지 하루 종일 누워서 머리를 뒤로 젖힌 채 휴식한다.",
+        "코점막을 건조시키기 위해 헤어드라이어로 뜨거운 바람을 불어넣는다."
+      ],
+      "a": 1,
+      "h": "해부학적으로 출혈이 잦은 비중격 전하방(부드러운 살 부위)을 압박하는 것이 핵심입니다.",
+      "e": "코피 응급처치의 정석: 약간 앞으로 숙인 자세 + 입 호흡 유도 + 부드러운 연골(콧방울 위) 부위 직접 압박(Pinching) + 이마/콧등 냉찜질입니다. 목덜미 타격은 미신입니다."
+    },
+    {
+      "level": "중",
+      "q": "머리 손상(뇌기저부 골절 등)이 의심되는 두부 외상 환자의 코에서 코피(또는 뇌척수액 혼합액)가 흐를 때 취해야 할 조치로 가장 올바른 것은? [★★★ 워크북/교재]",
+      "o": [
+        "출혈을 막기 위해 휴지나 솜으로 콧구멍을 빈틈없이 꽉 틀어막는다.",
+        "출혈액이 코에 맺히면 환자에게 코를 세게 풀게 하여 잔여물을 빼낸다.",
+        "솜이나 이물로 코를 압박하여 막지 말고, 흘러나오는 액체를 가볍게 닦아주기만 하며 즉시 119에 신고한다.",
+        "환자의 머리를 뒤로 완전히 젖히고 목을 과도하게 신전시킨다."
+      ],
+      "a": 2,
+      "h": "머리 안의 압력(뇌압)이 코를 통해 빠져나오고 있는데, 이를 막아버리면 뇌가 부풀어 오릅니다.",
+      "e": "머리 손상 시의 코피(또는 뇌척수액 유출)를 물리적으로 틀어막으면 두개강 내의 뇌압이 상승하여 환자가 사망하거나 뇌손상이 극심해지므로 절대 코를 틀어막아 지혈하지 않습니다."
+    },
+    {
+      "level": "중",
+      "q": "열경련(Heat cramp)과 열사병(Heat stroke)의 감별 및 처치에 관한 설명으로 가장 올바른 것은? [★★★ 워크북/교재 복합]",
+      "o": [
+        "열경련은 체온이 40도 이상 치솟아 의식을 잃는 병이므로 심폐소생술이 최우선이다.",
+        "열경련은 땀으로 빠져나간 염분과 수분을 짭짤한 음식이나 식염수로 보충해주면 빠르게 호전되는 근육 수축 질환이다.",
+        "열사병은 단순히 다리에 쥐가 나는 현상이므로 그늘에서 물 한 잔만 마시면 5분 내로 완치된다.",
+        "열사병 환자의 체온은 담요를 덮어주어 45도까지 올려주어야 치유된다."
+      ],
+      "a": 1,
+      "h": "경련(쥐남)은 전해질(소금) 부족, 사병(죽을 사)은 뇌의 온도조절기 고장입니다.",
+      "e": "열경련은 체내 전해질 부족에 의한 국소적 근육 경련이므로 염분(이온음료 등) 섭취와 휴식으로 호전됩니다. 열사병은 40도 이상의 고열과 중추신경계 이상을 동반하는 치명적 응급상황입니다."
+    },
+    {
+      "level": "중",
+      "q": "저체온증(Hypothermia)을 악화시키는 가장 위험한 환자의 자가 행동은? [강의/교재 추론]",
+      "o": [
+        "자신의 젖은 양말과 신발을 마른 것으로 갈아 신는 행동",
+        "몸을 덥히기 위해 가져온 소주(알코올)를 단숨에 들이마시는 행동",
+        "따뜻한 담요를 덮고 서로의 몸을 밀착하여 체온을 나누는 행동",
+        "찬바람을 피해 동굴 등 실내로 대피하는 행동"
+      ],
+      "a": 1,
+      "h": "술을 마시면 순간적으로 열이 나는 것 같지만, 실제로는 피부 표면으로 열을 다 뺏깁니다.",
+      "e": "음주는 말초 혈관을 강제로 확장시켜 체내 깊은 곳(심부)의 열을 피부 밖으로 빠르게 방출하게 만들므로 저체온증을 극도로 악화시킵니다. 절대 금기입니다."
+    },
+    {
+      "level": "중",
+      "q": "동상 환자 처치 시, 얼어붙은 부위를 비비지 말아야(No rubbing) 하는 해부조직학적 이유는 무엇인가? [강의/교재]",
+      "o": [
+        "비비면 피부에 각질이 생겨 미관상 좋지 않기 때문이다.",
+        "조직 내부의 얼음 결정들이 마찰로 인해 연약해진 세포벽과 신경, 모세혈관을 칼로 긋듯 파괴하여 괴사를 유발하기 때문이다.",
+        "비비는 행동은 에너지가 소모되어 저혈당을 유발하기 때문이다.",
+        "비비면 동상 부위의 체온이 너무 급격히 50도 이상 치솟기 때문이다."
+      ],
+      "a": 1,
+      "h": "얼어붙은 살 속에 현미경으로 보면 뾰족한 얼음 바늘들이 있습니다. 비비면 어떻게 될까요?",
+      "e": "동상 시 세포 내/외부에 얼음 결정이 생성되어 있습니다. 이 상태에서 조직을 물리적으로 마찰시키면 날카로운 결정이 세포와 모세혈관을 파괴하여 영구적인 조직 괴사(절단)를 초래합니다."
+    },
+    {
+      "level": "중",
+      "q": "구내염(Stomatitis) 환자의 통증 경감 및 치유를 돕기 위한 올바른 자가간호 지침은? [★★★ 워크북/교재]",
+      "o": [
+        "염증을 소독하기 위해 식초나 레몬즙을 원액 그대로 궤양 부위에 바른다.",
+        "살균성 구강세정제나 소금물로 자주 입안을 헹구고 청결을 유지한다.",
+        "입안의 화농성 반점을 이쑤시개로 모두 찔러 터트린다.",
+        "면역력을 높이기 위해 맵고 뜨거운 매운탕을 매끼 섭취한다."
+      ],
+      "a": 1,
+      "h": "점막이 벗겨진 궤양에 자극적인 것을 대면 고문과 같습니다.",
+      "e": "구내염 시에는 물리적, 화학적 자극(신맛, 매운맛, 뜨거운 음식, 향신료)을 철저히 피해야 하며, 소금물 양치나 구강세정제 사용이 보존적 치료로 권장됩니다."
+    },
+    {
+      "level": "중",
+      "q": "구강 질환과 그 특징적인 임상 증상이 올바르게 연결된 것은? [교재/강의]",
+      "o": [
+        "구순 헤르페스 - 혀에 깊고 큰 궤양이 파여 출혈이 낭자함",
+        "구내염 - 입술 주변에 투명하고 작은 물집(수포)이 군집을 이룸",
+        "구강 칸디다증 - 효모(이스트) 냄새가 나며 입안 점막에 우유 찌꺼기 같은 백색 병변이 나타남",
+        "치은염(잇몸 염증) - 뺨 안쪽에 검고 딱딱한 괴사 조직이 생김"
+      ],
+      "a": 2,
+      "h": "칸디다는 곰팡이의 일종이므로 효모 냄새와 하얀 막이 특징입니다.",
+      "e": "투명 수포는 헤르페스, 화농성 궤양 반점은 구내염, 이스트 냄새와 흰색 병변은 진균 감염인 구강 칸디다증의 전형적 증상입니다."
+    },
+    {
+      "level": "중",
+      "q": "안구 손상 시 환자 이송 과정에서 '양안 안대(두 눈을 모두 가림)'를 씌워주는 생리학적 이유는 무엇인가? [강의/교재]",
+      "o": [
+        "환자가 다친 자신의 눈을 보며 공포감에 질려 기절하는 것을 막기 위해서",
+        "인간의 안구는 동조 운동(conjugate movement)을 하므로, 안 다친 눈이 주변을 보려고 움직이면 다친 눈도 함께 움직여 손상이 악화되기 때문",
+        "한쪽 눈만 가리면 안대 값 청구가 안 되기 때문",
+        "빛이 조금이라도 들어가면 눈 안의 이물질이 폭발하기 때문"
+      ],
+      "a": 1,
+      "h": "한쪽 눈알을 굴리면 반대쪽 눈알도 똑같은 방향으로 굴러갑니다.",
+      "e": "눈은 시신경 연접에 의해 한쪽이 움직이면 반대쪽도 무조건 함께 움직이는 특성이 있습니다. 다치지 않은 눈으로 사물을 보려 움직이면 다친 눈도 움직여 각막/공막 파열이 심해지므로 두 눈을 모두 가려 안정시킵니다."
+    },
+    {
+      "level": "중",
+      "q": "13강 워크북 연습문제 연계: 심폐소생술 시 가슴압박의 깊이와 방법에 대한 지침으로 올바른 것은? (단, 성인 기준) [★★★ 워크북 연습문제 응용]",
+      "o": [
+        "환자의 가슴이 바닥에 완전히 닿을 때까지 체중을 실어 10cm 이상 아주 깊게 누른다.",
+        "간 손상을 막기 위해 갈비뼈 가장 아래쪽(명치 끝)을 집중적으로 누른다.",
+        "손꿈치를 가슴 정중앙(흉골의 아래쪽 절반)에 대고, 팔꿈치를 펴서 바닥과 수직이 되게 한 뒤 체중을 실어 강하고 빠르게 압박한다.",
+        "손가락 열 개를 쫙 펴서 가슴 전체를 마사지하듯 부드럽게 주무른다."
+      ],
+      "a": 2,
+      "h": "손꿈치만 닿게 하고 몸은 수직, 압박 부위는 가슴 정중앙입니다.",
+      "e": "가슴압박은 명치(검상돌기)를 피한 가슴뼈 중간 부위에 손꿈치만 대고, 수직으로 체중을 실어 압박해야 심장 펌핑이 제대로 이루어집니다."
+    },
+    {
+      "level": "중",
+      "q": "혀(Tongue)에 깊은 상처가 생겨 출혈이 발생했을 때, 간호사가 취해야 할 상황 판단으로 가장 적절한 것은? [★★★ 워크북/교재]",
+      "o": [
+        "혀에는 혈관이 없으므로 피가 나도 2시간 정도 방치하면 저절로 멈춘다.",
+        "혀의 상처는 혈관이 매우 풍부하여 출혈량이 많으므로 주의 깊게 관찰하고, 지혈이 안 되거나 30분 이상 지속되면 즉시 병원으로 이송한다.",
+        "지혈을 위해 환자의 입을 꿰매어 닫아버린다.",
+        "뜨거운 물을 강제로 마시게 하여 혈관을 익혀서 지혈한다."
+      ],
+      "a": 1,
+      "h": "혀는 근육과 핏줄 덩어리입니다.",
+      "e": "혀나 구강 내 출혈은 혈액 공급이 풍부해 과다출혈로 이어질 수 있으므로, 거즈로 직접 압박 지혈을 시도하되 30분 이상 지혈되지 않으면 전문 의료기관의 처치가 필수적입니다."
+    },
+    {
+      "level": "중",
+      "q": "코피(비출혈)를 예방하고 지혈 후 재출혈을 막기 위한 생활 지도로 올바른 것은? [교재/강의]",
+      "o": [
+        "코피가 멈추자마자 코안의 찌꺼기를 제거하기 위해 코를 세게 푼다.",
+        "코피가 멎은 후 즉시 나가서 1시간 동안 전력 질주 달리기를 한다.",
+        "코피가 멎더라도 최소 수 시간 동안은 코를 풀거나 쑤시지 말고, 과격한 운동을 금하여 지혈 상태가 안정되도록 돕는다.",
+        "코점막을 단련하기 위해 마른오징어를 콧구멍에 넣는다."
+      ],
+      "a": 2,
+      "h": "상처에 생긴 혈전(피딱지)이 완전히 자리 잡을 때까지 건드리면 안 됩니다.",
+      "e": "코피 지혈 후 코를 푸는 행위는 형성된 혈전(피딱지)을 떨어뜨려 2차 출혈을 일으키므로 절대 삼가며, 혈압을 높이는 과도한 운동이나 스트레스도 피해야 합니다."
+    },
+    {
+      "level": "중",
+      "q": "발열(Fever)의 생리학적 기전에 대한 간호사의 올바른 환자 교육 내용은? [강의/교재]",
+      "o": [
+        "\"열이 나는 것은 몸 안의 장기가 녹고 있다는 뜻이므로 무조건 해열제를 한 번에 10알씩 드셔야 합니다.\"",
+        "\"열 자체는 질병이 아니라, 우리 몸에 바이러스나 염증 등 이상이 발생했음을 알려주고 면역세포가 싸우고 있다는 고마운 '경고체계'입니다.\"",
+        "\"열이 나는 것은 꾀병이므로 참아야 합니다.\"",
+        "\"정상인은 일생 동안 절대 열이 나서는 안 됩니다.\""
+      ],
+      "a": 1,
+      "h": "열은 내 몸을 지키는 소방벨 알람과 같습니다.",
+      "e": "강의 오디오 핵심. 발열은 인체 내부에 이상(감염 등)이 왔음을 알려주는 일차적 경고 체계(방어기전)이므로, 열이 난다는 사실 자체가 문제가 아니라 열의 원인을 찾는 것이 중요합니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

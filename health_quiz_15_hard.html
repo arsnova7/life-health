@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [15강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제15강: 노년기 건강문제와 관리 2 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "뇌사(Brain death) 판정과 장기기증 과정에 대한 다음 [사례]의 설명 중, 의학적/법적 원칙에 가장 어긋나는 것은? [교재/강의 심화 적용]\n[사례] 교통사고로 두부 외상을 입은 30대 C씨가 병원에 실려왔다. \n1) 검사 결과 대뇌와 뇌간 기능이 모두 불가역적으로 소실된 뇌사 상태로 판정되었다.\n2) C씨는 인공호흡기 없이는 자발 호흡을 1분도 유지할 수 없는 상태이다.\n3) 담당 의사는 뇌사 판정을 내린 즉시, 보호자의 동의 여부와 무관하게 국가 장기기증법에 따라 C씨의 장기 적출 수술을 강제 집행했다.\n4) 뇌사자의 장기는 생명 유지가 위급한 환자들에게 공정하게 분배될 예정이다.",
+      "o": [
+        "1) 뇌간 기능 소실 판정",
+        "2) 인공호흡기 없는 자발 호흡 불가 상태",
+        "3) 보호자 동의 없는 강제 장기 적출",
+        "4) 장기의 공정한 분배"
+      ],
+      "a": 2,
+      "h": "국가가 개인의 신체를 강제로 빼앗을 수 없습니다. 기증은 고귀한 희생과 동의가 전제됩니다.",
+      "e": "아무리 뇌사 상태이고 장기가 절실하더라도, 장기기증은 본인의 사전 동의나 유가족(보호자)의 동의 없이는 절대 강제 집행될 수 없습니다. 가족의 기증 동의가 필수적입니다."
+    },
+    {
+      "level": "상",
+      "q": "연명의료결정법에서 '임종과정에 있는 환자'를 정의하는 생명윤리적 기준과 절차를 가장 정확히 기술한 것은? [교재/강의 추론]",
+      "o": [
+        "환자가 스스로 '나는 살기 싫다'고 구두로 1회 선언하면 즉시 임종과정으로 인정된다.",
+        "현대 의학으로 치료 효과를 기대할 수 없고, 질병이 급속도로 악화되어 수일 내지 수주 내에 사망이 임박했다는 담당 의사와 해당 분야 전문의의 일치된 의학적 판단이 객관적으로 존재해야 한다.",
+        "경제적 빈곤 상태에 처한 80세 이상 노인은 의사 판단 없이 자동 임종과정으로 간주된다.",
+        "식물인간 상태로 1년이 경과하면 호흡 여부와 상관없이 무조건 임종과정으로 판정된다."
+      ],
+      "a": 1,
+      "h": "생명을 포기하는 것이 아니라, 의학적 한계를 겸허히 인정하는 공식적 절차입니다.",
+      "e": "임종과정의 판단은 주관적 우울감이나 경제적 빈곤이 기준이 될 수 없습니다. 오직 질병의 회생 불가능성과 사망의 임박성에 대한 의사 2인(담당의+전문의)의 엄격하고 객관적인 의학적 합의가 법적 기준입니다."
+    },
+    {
+      "level": "상",
+      "q": "한국의 '죽음의 질 지수' 향상을 가로막았던 전통적 장애 요인과, 이를 극복하기 위한 '웰다잉 가이드라인'의 실천 과제를 바르게 연결한 것은? [강의/교재 심층 융합]",
+      "o": [
+        "장애 요인: 병원 치료비의 저렴함 / 실천 과제: 고가의 사설 병원으로만 이동",
+        "장애 요인: 죽음을 삶의 연장으로 보는 과도한 낙관주의 / 실천 과제: 죽음의 공포를 주입하는 충격 요법",
+        "장애 요인: 죽음을 금기시하여 미리 이야기하거나 준비하지 못하게 하는 사회적 분위기 / 실천 과제: 살아있을 때 삶을 성찰하고, 가족과의 관계를 정리하며, 사후를 적극적으로 공부하고 준비하는 열린 태도",
+        "장애 요인: 너무 많은 장기기증 / 실천 과제: 장기기증 전면 금지법 제정"
+      ],
+      "a": 2,
+      "h": "우리나라는 밥상머리에서 '죽음' 이야기 꺼내는 것을 매우 꺼려왔습니다. 그래서 준비 없이 허둥지둥 마지막을 맞이합니다.",
+      "e": "죽음을 재수 없는 불길한 사건으로 여겨 대화조차 금기시하던 전통적 분위기가 임종 준비를 방해했습니다. 이를 극복하기 위해 웰다잉 가이드라인은 삶의 진정한 의미 성찰, 유산 및 주변 정리, 인간관계 화해 등 적극적이고 열린 죽음 준비를 권장합니다."
+    },
+    {
+      "level": "상",
+      "q": "식물인간(Vegetative state) 환자가 연명의료결정법의 '즉각적 대상(임종과정)'이 되기 어려운 해부생리학적 이유는 무엇인가? [강의/교재 개념 연계]",
+      "o": [
+        "식물인간은 대뇌피질이 완전히 정상이라 대화가 가능하기 때문이다.",
+        "식물인간은 생명 유지의 핵심인 뇌간(Brain stem) 기능이 보존되어 있어 인공호흡기 없이도 자발적 호흡과 심장박동이 스스로 오랫동안 유지될 수 있으므로, 당장 사망이 임박한 '임종과정'으로 단정하기 어렵기 때문이다.",
+        "식물인간은 100% 한 달 내에 깨어나 걸어 다니기 때문이다.",
+        "식물인간은 법적으로 이미 사망한 시신으로 분류되기 때문이다."
+      ],
+      "a": 1,
+      "h": "식물인간 환자는 의식만 없을 뿐 스스로 숨을 쉬며 몇 년이고 살아갈 수 있습니다. 즉, 내일 당장 죽는 '임종 임박' 상태가 아닙니다.",
+      "e": "연명의료 중단은 '회생 불가능하며 사망이 임박한' 환자가 대상입니다. 식물인간은 대뇌 손상으로 의식은 없으나 뇌간이 살아있어 자발 호흡을 하며 수년간 생존할 수 있으므로, 합병증이 없는 한 즉각적인 사망 임박(임종과정) 상태로 보기 어렵습니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 다음 중 출제 위원으로서 15강 퀴즈를 생성할 때 **가장 올바른 판단**을 내린 것은?",
+      "o": [
+        "기출문제 파일(2015년 Q21 등)에 '소화성 궤양의 1차적 원인(헬리코박터균)' 문제가 자주 나오므로, 15강 퀴즈에도 중요도를 높여 출제했다.",
+        "15강 범위는 연명의료, 죽음, 장기기증 등인데, 기출 파일(2016년 Q70 등)에는 기도폐쇄, 하임리히법 등이 있다. 응급처치도 생명과 직결되므로 15강에 융합하여 출제했다.",
+        "기출 파일 전체를 스캔한 결과 15강 관련 지문(뇌사, 연명의료 등)이 전무함을 확인하고, 기출문제 재활용을 0%로 차단한 뒤 오직 제공된 15강 교재/워크북/강의록 텍스트에서만 100% 새로운 퀴즈를 창작했다.",
+        "문제가 부족하여 인터넷에서 '한국의 존엄사 합법화 현황' 뉴스를 검색하여 출제했다."
+      ],
+      "a": 2,
+      "h": "가장 중요한 시스템 지침: '현재 개편된 15강 텍스트만을 근거로 하라. 과거 기출에 있더라도 15강 소스에 없으면 무조건 삭제하라. 외부 지식은 환각(Hallucination)이므로 쓰지 마라.'",
+      "e": "출제 위원의 최우선 지침은 제공된 소스(15강) 텍스트 우선과 철저한 구 기출 필터링입니다. 기출 파일에 15강 주제가 없다면 억지로 끼워 넣거나 외부 검색을 하지 않고, 주어진 15강 자료 안에서만 문제를 창작하는 3번이 가장 완벽한 판단입니다."
+    },
+    {
+      "level": "상",
+      "q": "죽음을 대하는 현대 보건의료의 패러다임이 '치료(Cure)' 중심에서 '돌봄(Care)' 중심으로 확장되고 있음을 보여주는 가장 상징적인 제도는 무엇인가? [강의 추론]",
+      "o": [
+        "응급실 중환자실의 병상 수를 10배 늘리는 정책",
+        "모든 암 환자에게 신약 항암제를 무상 제공하는 정책",
+        "호스피스 완화의료 제도의 확충 및 연명의료결정법의 시행",
+        "국가가 지정한 특정 병원에서만 출산하도록 하는 정책"
+      ],
+      "a": 2,
+      "h": "어차피 고칠 수 없는 병(Cure 불가)이라면, 남은 시간을 고통 없이 평안하게 돌봐주자(Care 중심)는 철학입니다.",
+      "e": "현대 의학으로 완치가 불가능한 말기 질환 앞에서 무의미한 연명(Cure 집착)을 멈추고, 환자의 통증 완화와 존엄한 임종 준비를 돕는 호스피스 완화의료(Care 중심)와 연명의료결정법은 현대 의료 패러다임의 중대한 철학적 전환을 상징합니다."
+    },
+    {
+      "level": "상",
+      "q": "15강 연습문제 연계: 치매의 임상적 단계 중 '초기, 중기, 말기'의 기능 쇠퇴 양상을 고려할 때, 다음 환자의 상태는 어느 단계에 가장 가까운가? [★★★ 워크북 연습문제 응용]\n[상태] \"환자는 자신이 누구인지, 가족이 누구인지 전혀 알아보지 못한다. 보행이 불가능하여 침상에만 누워 지내며, 의미 있는 언어 소통이 불가능해져 웅얼거림만 남았고, 대소변 실금이 있어 전적인 기저귀 교체 돌봄이 필요하다.\"",
+      "o": [
+        "경도인지장애 (MCI)",
+        "치매 초기",
+        "치매 중기",
+        "치매 말기 (Late stage)"
+      ],
+      "a": 3,
+      "h": "인간으로서 습득했던 모든 인지적, 신체적 능력이 역순으로 상실되어 갓난아기 상태로 돌아간 가장 마지막 단계입니다.",
+      "e": "가족 인지 불가, 언어 소실, 보행 불가, 대소변 실금 등은 뇌 기능이 광범위하게 파괴되어 일상생활수행능력(ADL)이 완전히 붕괴된 치매 말기의 전형적 징후입니다. 초기는 최근 기억 장애, 중기는 길 잃음이나 돈 계산 오류 등이 주된 증상입니다."
+    },
+    {
+      "level": "상",
+      "q": "연명의료를 중단하거나 유보하기 위해 환자 본인의 의사를 확인하는 법적/의학적 근거 자료로 활용될 수 있는 문서는 무엇인가? (교재 외 상식이 아닌, 강의 흐름상 연명의료결정의 환자 자기결정권과 관련된 핵심 개념) [강의 추론]",
+      "o": [
+        "은행 통장 비밀번호와 재산 상속 비율을 적은 유언장",
+        "건강할 때 미리 자신의 연명의료에 대한 거부 의사를 밝혀두는 '사전연명의료의향서' 또는 의사와 작성한 '연명의료계획서'",
+        "보호자가 환자 몰래 작성한 신체 포기 각서",
+        "환자의 주치의가 단독으로 작성한 임상 연구 동의서"
+      ],
+      "a": 1,
+      "h": "내가 나중에 의식이 없어질 때를 대비해, '나에게 억지로 기계를 달지 마라'고 미리 써두는 문서입니다.",
+      "e": "연명의료결정법에서 환자의 '자기결정권'을 실현하는 가장 중요한 수단은 환자 본인이 의식이 명료할 때 미리 작성해두는 사전연명의료의향서나, 말기 판정 후 주치의와 함께 작성하는 연명의료계획서입니다. 이를 통해 환자의 진정한 의사를 법적으로 보호합니다."
+}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

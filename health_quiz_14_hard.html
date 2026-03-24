@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [14강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제14강: 노년기 건강문제와 관리 1 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "다음 임상 사례를 읽고, 환자 A씨가 겪고 있는 신경인지기능장애와 가장 거리가 먼 것을 고르시오. [교재/강의 복합 추론]\n[사례] 75세 A씨는 최근 며칠이 무슨 요일인지 전혀 알지 못한다. 또한 식사 시간에 며느리가 숟가락을 쥐어주어도 어떻게 밥을 떠먹는지 몰라 가만히 쥐고만 있으며, 손자가 '할아버지, 저 왔어요'라고 해도 누구인지 알아보지 못하고 '뉘신지?'라고 묻는다.",
+      "o": [
+        "시간 지남력 장애 (Time disorientation)",
+        "실행증 (Apraxia)",
+        "사람 지남력 장애 (Person disorientation)",
+        "주의력 과잉 행동장애 (ADHD)"
+      ],
+      "a": 3,
+      "h": "요일을 모르면 시간 장애, 숟가락 사용법을 모르면 실행증, 손자를 모르면 사람 장애입니다.",
+      "e": "요일 인지 불가(시간 지남력 장애), 숟가락 사용법 상실(운동기능은 있으나 수행 불가 = 실행증), 손자 인지 불가(사람 지남력 또는 실인증)는 치매의 전형입니다. ADHD(주의력 결핍 과다행동장애)는 소아기 정신질환으로 치매 증상과 무관합니다."
+    },
+    {
+      "level": "상",
+      "q": "알츠하이머 치매와 혈관성 치매의 병태생리적 차이를 근거로 할 때, 환자의 예방 및 관리 전략으로 가장 과학적인 것은? [강의/교재 심화]",
+      "o": [
+        "알츠하이머 치매는 고혈압 약으로 완치가 가능하므로, 모든 환자에게 아스피린을 메가 도스로 투여한다.",
+        "혈관성 치매는 뇌혈류의 막힘(허혈)이나 터짐에 의해 뇌세포가 사멸하는 구조이므로, 평소 당뇨, 고지혈증, 혈압 관리 및 혈전 관리를 철저히 하면 발생 확률을 대폭 낮출 수 있다.",
+        "두 치매 모두 베타 아밀로이드 단백질 제거 수술을 통해 익일 100% 회복된다.",
+        "알츠하이머 치매 환자에게만 '가역성 치매' 프로토콜을 적용하여 우울증 약을 1알 먹이면 즉시 완치된다."
+      ],
+      "a": 1,
+      "h": "혈관이 튼튼하면 혈관성 치매는 오지 않습니다.",
+      "e": "알츠하이머는 원발성 퇴행성 질환으로 현재 예방/완치가 어렵지만, 혈관성 치매는 뇌혈관의 경색이나 출혈(심뇌혈관 위험인자 기원)이 원인이므로 선행 만성질환을 통제하면 분명한 사전 예방이 가능한 비가역성 치매입니다."
+    },
+    {
+      "level": "상",
+      "q": "치매 환자의 가족이 '우리 어머니가 자꾸 도둑이 들었다며 저를 의심하고 화를 내서 미치겠어요'라고 호소할 때, 간호사가 치매의 정신행동증상(BPSD) 기전을 바탕으로 설명해야 할 가장 적절한 내용은? [강의 심화 적용]",
+      "o": [
+        "\"어머니의 성격이 원래부터 나쁘셨던 것이 늙으면서 폭발한 것이니 그냥 무시하십시오.\"",
+        "\"어머니는 지금 '실행증'이 심하셔서 손발을 못 움직이는 고통을 화로 푸시는 겁니다.\"",
+        "\"어머니의 도둑 망상은 단기 기억력이 심하게 상실되어, 자신이 물건을 둔 위치를 잊어버린 후 뇌가 그 빈 공간을 합리화하기 위해 '남이 훔쳐갔다'는 방어기제를 작용한 병적인 증상이므로, 절대 논쟁하지 말고 주의를 환기시켜야 합니다.\"",
+        "\"지금 즉시 100에서 7을 빼보라고 시켜서 어머니의 기를 꺾어야 합니다.\""
+      ],
+      "a": 2,
+      "h": "기억이 지워진 까만 도화지에 뇌가 나름의 엉뚱한 상상력(망상)으로 그림을 그려 넣은 것입니다. 병의 증상일 뿐입니다.",
+      "e": "치매의 피해 망상(도둑 망상)은 기억 상실로 인한 공백을 메우려는 뇌의 병적 보상 기전입니다. 이를 환자의 본심으로 오해해 논쟁/설득하려 하면 오히려 환자의 불안과 공격성을 증폭시키므로, 병적 증상임을 이해하고 감정을 수용하며 화제를 전환하는 것이 정석입니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 다음 과거 기출문제(2018년 Q12 등)에 자주 출제되었던 \"마리 야호다(Marie Jahoda)의 정신건강 평가기준 중 '자신에 대한 태도'에 해당하는 것은?\"이라는 문항을 최신 14강(노년기 건강문제와 관리 1 - 치매) 범위에 맞게 편집할 때, 출제 위원의 가장 올바른 조치는?",
+      "o": [
+        "기출문제이므로 워크북 우선 원칙에 따라 무조건 1번 문제로 똑같이 출제한다.",
+        "마리 야호다 이론은 정신건강(9강 등 앞 단원) 파트의 내용이며, 현재 제공된 14강 치매 범위의 소스 텍스트에는 일절 등장하지 않는 '과거의 유물' 및 '타 단원' 내용이므로 100% 필터링하여 철저히 삭제한다.",
+        "'자신에 대한 태도'를 '치매에 대한 태도'로 단어만 바꾸어 억지로 출제한다.",
+        "마리 야호다가 알츠하이머의 최초 발견자이므로 치매 문제로 변형한다."
+      ],
+      "a": 1,
+      "h": "가장 중요한 제1원칙: '현재 개편된 14강 교재/워크북 소스에 없는 내용은 절대 내지 마라.'",
+      "e": "제공된 과거 기출 PDF 파일들에는 전 범위 문제가 섞여 있습니다. 마리 야호다 정신건강 이론, 당뇨병, 심혈관계 문제 등은 14강(치매) 텍스트 소스에 존재하지 않으므로 통합 출제 원칙의 정밀 필터링 지침에 의거하여 전면 배제해야 합니다."
+    },
+    {
+      "level": "상",
+      "q": "치매의 원인인 '가역성(Reversible) 치매'를 감별 진단해야 하는 가장 중요한 임상적/보건학적 이유는 무엇인가? [강의/교재 철학적 추론]",
+      "o": [
+        "가역성 치매는 전염성이 극도로 강해 격리 병동이 필요하기 때문이다.",
+        "가역성 치매 환자는 뇌가 아닌 심장이 파괴되는 병이므로 심장 이식 수술을 즉시 해야 하기 때문이다.",
+        "가역성 치매는 약물 부작용, 영양 결핍, 우울증 등 2차적 원인에 의해 뇌기능이 억제된 상태이므로, '원인 질환'을 조기에 정확히 찾아내어 교정(치료)해주면 인지기능이 극적으로 정상화되거나 호전될 수 있는 유일한 '고칠 수 있는 치매'이기 때문이다.",
+        "가역성 치매는 백신 한 방으로 전 국민 예방이 가능하기 때문이다."
+      ],
+      "a": 2,
+      "h": "절망 속의 한 줄기 빛입니다. 진짜 치매(알츠하이머)가 아니라 다른 병 때문에 치매인 척 흉내 내는 상태를 잡아내면 환자의 인생을 살릴 수 있습니다.",
+      "e": "가역성 치매(약물, 우울, 대사장애 등)는 원발성 뇌파괴(비가역성)가 아니기 때문에 원인 제공 요소만 치료하면 치매 증상이 개선될 수 있습니다. 따라서 노인에게 인지 저하가 오면 무조건 알츠하이머라 단정 짓기 전에 가역적 요인이 숨어있는지(DEMENTIA 감별)를 반드시 배제하는 것이 의학적으로 매우 중요합니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 과거 기출문제(2019년 Q37) \"좋은 식생활 지침과 거리가 가장 먼 것은? 정답: 특정 기호식품만을 매일 섭취한다\" 문항을 14강(치매) 범위에서 합법적인 퀴즈로 살려내기 위해, '치매 예방 수칙 3.3.3'과 융합하여 가장 완벽하게 재창조한 심화 문항은?",
+      "o": [
+        "좋은 식생활은 치매랑 상관없으므로 기출 그대로 낸다.",
+        "다음 중 치매국가책임제 시행 연도는?",
+        "[2019년 기출 변형] 보건복지부가 권고하는 '치매 예방 수칙 3.3.3'의 3권(권장) 식생활 지침으로 가장 올바른 것은? -> (정답) 식사를 거르지 않고, 뇌 혈관에 나쁜 기름기 많은 특정 육류 위주 식단을 피하며, 뇌 기능 보호를 위해 생선과 채소를 골고루 섭취한다.",
+        "치매 환자의 마리야호다 정신건강 기준은?"
+      ],
+      "a": 2,
+      "h": "타 단원의 영양학 기출을 폐기하지 않고 굳이 활용하려면, 14강 텍스트에 명시된 '치매 예방 식사 수칙'으로 환골탈태시켜야 규칙 위반이 아닙니다.",
+      "e": "기존 영양학 지문은 소스 외 범위지만, 이를 14강 치매 텍스트에 명시된 '3권: 식사(생선/채소 골고루, 기름기 피함)' 개념으로 완벽히 재구성하면 14강 출제 범위에 부합하는 훌륭한 기출 변형 문제가 됩니다."
+    },
+    {
+      "level": "상",
+      "q": "치매 환자의 인지 기능 쇠퇴 과정에 대한 뇌과학적 통찰과 관련된 간호 원칙으로, 가장 적절한 태도는? [강의 심화]",
+      "o": [
+        "환자의 기억력 저하가 확인되면 즉시 뇌를 개복하여 수술로 죽은 뇌세포를 100% 긁어낸다.",
+        "환자가 과거의 훌륭했던 학력이나 직업 능력을 발휘하지 못하면 수치심을 자극하여 뇌를 각성시킨다.",
+        "한번 파괴된 뇌세포는 재생(Reversible recovery)이 불가능하다는 병리학적 한계를 인정하고, 잔존하는 인지 기능(남아있는 능력)을 최대한 오래 유지하도록 돕는 '인지재활 및 지지적 환경 조성'에 초점을 맞춘다.",
+        "치매는 마음의 병이므로 정신과 상담만 3번 받으면 뇌 위축이 마법처럼 팽창한다."
+      ],
+      "a": 2,
+      "h": "잃어버린 것을 억지로 되찾으려 환자를 고문하기보다, 남은 불씨를 지켜내는 것이 치매 케어의 본질입니다.",
+      "e": "강의 오디오 내용. 뇌세포는 일단 손상되면 재생이 안 되는 비가역적 특성을 갖습니다. 따라서 근본적 완치가 불가능함을 수용하고, 잔존 능력을 보호하는 비약물적 재활과 악화 방지(약물)가 현재 돌봄의 최선입니다."
+    },
+    {
+      "level": "상",
+      "q": "다음 중 '경도인지장애(Mild Cognitive Impairment)' 환자에게 일어나는 신경생리학적 변화와 임상적 의의를 가장 정확히 분석한 것은? [교재/강의 추론]",
+      "o": [
+        "인지 기능이 완벽하게 0점에 수렴하여 스스로 대소변조차 가리지 못하는 치매 말기의 시작점이다.",
+        "단순 건망증과 달리 기억력 저하가 동연령대 대비 '객관적 검사 수치'로 뚜렷하게 증명되지만, 아직 뇌의 치명적 손상 임계점을 넘지 않아 '독립적인 일상생활(ADL)'의 붕괴는 오지 않은, 치매 예방 개입(운동, 인지훈련 등)의 골든타임이다.",
+        "경도인지장애 진단을 받는 즉시 100% 알츠하이머로 사망하므로 예방이 무의미하다.",
+        "주로 가역성 대사 질환(갑상선 저하증 등)에 의해서만 유발되는 10대 청소년 전용 질환이다."
+      ],
+      "a": 1,
+      "h": "건망증(정상) < 경도인지장애(경고등 켜짐) < 치매(일상생활 불가). 이 중간에서 어떻게 대처하느냐가 노년의 삶을 좌우합니다.",
+      "e": "경도인지장애는 치매와 정상의 중간 지대로, 객관적 인지(기억력 등) 검사에서는 비정상으로 나오나 일상생활 자립성은 유지되는 상태입니다. 치매로의 이행 확률이 매우 높아 보건학적으로 사전 예방과 적극적 관리가 시급한 골든타임(고위험군)을 의미합니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 과거 기출문제 파일에 출제되었던 \"존 고든의 평형이론(병인-숙주-환경)에 의한 질병 발생 요인\" 지문을 현재 14강 치매 단원 퀴즈로 낼 수 있는가?",
+      "o": [
+        "14강 교재에 존 고든 이론이 명시되어 있으므로 낼 수 있다.",
+        "치매도 질병이므로 존 고든 이론으로 무조건 변형하여 출제해야 한다.",
+        "존 고든의 역학 이론은 과거 앞 단원(질병 예방 등)의 내용이며, 14강 치매 텍스트 및 오디오 소스에는 전혀 존재하지 않으므로 통합 출제 원칙에 따라 철저히 삭제(필터링)해야 한다.",
+        "존 고든이 치매의 유전적 원인을 밝혔으므로 14강 핵심으로 출제한다."
+      ],
+      "a": 2,
+      "h": "출제 위원으로서 '소스 텍스트에 근거하지 않은 내용은 절대 포함하지 말라'는 최우선 지침을 지키십시오.",
+      "e": "존 고든의 평형 이론, 1/2/3차 질병 예방 단계 등의 과거 기출 개념은 현재 제공된 14강(노년기 치매, 예방수칙 등) 출제 소스 파일에 없는 외부/타 단원 내용입니다. 따라서 100% 배제되어야 맞습니다."
+    },
+    {
+      "level": "상",
+      "q": "치매 환자의 인지 기능 및 일상생활 수행 능력 저하 양상을 '역발달적(Retrogenesis) 모델'로 설명할 때, 가장 타당한 현상 묘사는? [강의 심층 추론]",
+      "o": [
+        "가장 최근에 학습한 복잡한 고등 인지(시간 개념, 돈 계산 등)가 가장 먼저 무너지고, 영아기 때 획득한 가장 본능적인 생존 기능(대소변 가리기, 음식 씹기)이 병의 가장 말기에 마지막으로 상실된다.",
+        "태어날 때부터 가지고 있던 호흡과 심장 박동이 치매 초기에 가장 먼저 멈춘다.",
+        "치매에 걸리면 오히려 어린 시절의 지능 지수를 회복하여 천재가 된다.",
+        "본능적이고 원초적인 감정(식욕 등)이 치매 초기에 먼저 사라지고, 고도의 수학적 계산 능력이 말기까지 강력하게 유지된다."
+      ],
+      "a": 0,
+      "h": "인간이 나이를 먹으며 배워온 순서의 역방향으로 뇌가 지워지는 현상입니다. (고급 기술 상실 -> 본능 상실)",
+      "e": "치매는 뇌 기능이 붕괴될 때 나중에 배운 고급 정보(날짜, 돈 계산, 길 찾기 등)를 먼저 잃어버리고, 아기 때 배운 원초적 본능(숟가락질, 대소변 통제, 삼키기)을 가장 마지막 말기에 상실하는 퇴행적 역발달 양상을 보입니다."
+}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

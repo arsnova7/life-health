@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [10강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제10강: 스트레스의 이해와 관리 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "다음 중 '인지적 대처(Cognitive coping)' 전략의 특성을 가장 정확히 설명한 것은? [2016년 기출 응용/교재]",
+      "o": [
+        "스트레스를 유발하는 환경이나 객관적 사실을 물리적으로 완전히 바꾸어 버린다.",
+        "감정을 폭발시켜 눈물을 흘리거나 친구에게 신세 한탄을 한다.",
+        "객관적인 사실의 변화는 없으나, 상황을 바라보는 관점이나 그 사건이 주는 '의미'를 긍정적으로 변화시킨다.",
+        "점진적으로 근육을 수축시키고 이완하는 신체적 훈련을 반복한다."
+      ],
+      "a": 2,
+      "h": "사건 자체는 지울 수 없지만, 내 마음의 해석 프레임을 바꾸는 것입니다.",
+      "e": "2016 기출 핵심. 인지적 대처는 상황 자체를 바꾸는 문제중심적 대처와 달리, 사실은 그대로 둔 채 사건의 해석과 의미를 재구성하여 스트레스를 줄이는 내적 전략입니다."
+    },
+    {
+      "level": "중",
+      "q": "다음 예시에서 김 대리가 사용한 스트레스 대처 전략은 라자루스의 분류 중 어디에 해당하는가? [강의/교재 응용]\n[상황] \"상사에게 부당한 질책을 받고 화가 난 김 대리는 퇴근 후 절친한 친구를 만나 3시간 동안 상사 흉을 보며 쌓인 감정과 울분을 터뜨렸다.\"",
+      "o": [
+        "문제중심적 대처",
+        "인지적 대처",
+        "정서중심적 대처",
+        "생리적 회피 대처"
+      ],
+      "a": 2,
+      "h": "상사(원인)를 직접 찾아가 문제를 해결한 것이 아니라, 자신의 '감정 찌꺼기'를 해소하는 데 집중했습니다.",
+      "e": "친구와의 대화, 울분 터뜨리기, 소리 지르기 등은 문제 자체를 고치는 것이 아니라 스트레스로 발생한 부정적 감정을 해소하려는 전형적인 '정서중심적 대처'입니다."
+    },
+    {
+      "level": "중",
+      "q": "크랜웰-워드(Cranwell-Ward)의 스트레스 취약성 검사의 활용 목적과 지표 해석에 대한 설명으로 올바른 것은? [교재]",
+      "o": [
+        "점수가 8점 이하라면 스트레스 저항력이 뛰어나므로 현재의 생활습관을 계속 유지하면 된다.",
+        "건강식, 금연/금주, 운동, 정서적 안녕감 등 8개 하위 척도를 통해 자신이 어떤 영역에서 스트레스에 무방비 상태인지(취약한지) 파악할 수 있다.",
+        "이 검사는 태어날 때 한 번만 측정하면 평생 점수가 변하지 않는 유전적 검사이다.",
+        "오직 직장 내 업무 능력만을 평가하는 인사고과용 도구이다."
+      ],
+      "a": 1,
+      "h": "여러 생활 영역을 골고루 평가하여 나의 구멍 난 방패(취약점)를 찾는 것입니다.",
+      "e": "스트레스 취약성 검사는 다각적인 생활습관(운동, 영양, 휴식 등)을 점검하여 취약점을 파악하고 적합한 관리 전략을 세우기 위한 도구입니다. 8점 이하는 '불량(취약)' 상태를 뜻합니다."
+    },
+    {
+      "level": "중",
+      "q": "다음 중 '비합리적 신념 논박하기(인지의 변화)' 기법을 적용해야 할 일상적인 스트레스 유발 사고방식의 예시로 가장 거리가 먼 것은? [강의/교재]",
+      "o": [
+        "절대론적인 생각: \"나는 이번 프로젝트에서 단 한 치의 오차나 실수도 해서는 안 된다.\"",
+        "흑백논리: \"이 시험에서 100점을 받지 못하면 내 인생은 완전히 실패한 쓰레기다.\"",
+        "현실적 긍정 사고: \"비록 이번 발표에서 약간 더듬었지만, 전체적인 내용은 잘 전달했어. 다음엔 더 나아질 거야.\"",
+        "항상 남을 탓하기: \"내가 승진을 못 한 것은 전적으로 나를 질투하는 김 과장과 멍청한 팀원들 때문이다.\""
+      ],
+      "a": 2,
+      "h": "비합리적 신념은 융통성이 없고 극단적인 생각들입니다.",
+      "e": "현실적이고 긍정적인 자기 위로는 '합리적인 사고'의 예시입니다. 비합리적 신념은 '무조건 ~해야만 해(절대론)', '전부 아니면 전무(흑백논리)', '남 탓하기' 등 극단적이고 왜곡된 인지 상태를 말합니다."
+    },
+    {
+      "level": "중",
+      "q": "스트레스 관리를 위한 생리적 이완 기법 중 '점진적 근육이완(Progressive muscle relaxation)'의 기본 원리와 전제로 가장 올바른 것은? [★★★ 워크북 연습문제/교재]",
+      "o": [
+        "스트레스가 심하고 불안하면 근육이 긴장된다는 정신-신체 연관성을 전제로, 의도적으로 신체 각 부위의 근육을 수축시켰다 이완함으로써 불안을 완화한다.",
+        "근육에 무거운 바벨을 매달아 한계치까지 혹사시켜 스트레스를 물리적으로 파괴한다.",
+        "조용한 곳에서 자신의 호흡에만 집중하여 뇌파를 알파파로 유도한다.",
+        "불안한 상황 자체의 의미를 재해석하여 인지 구조를 재편성한다."
+      ],
+      "a": 0,
+      "h": "마음이 긴장되면 몸(근육)도 굳는다는 연결고리를 이용해 몸을 풀어 마음을 풉니다.",
+      "e": "워크북 연습문제 해설. 점진적 근육이완은 정신과 신체의 연관성을 바탕으로, 발끝부터 머리까지 차례대로 근육의 긴장과 이완을 반복하여 깊은 신체적, 심리적 이완을 유도하는 기법입니다."
+    },
+    {
+      "level": "중",
+      "q": "다음 중 과도한 업무나 책임감으로 인한 스트레스를 줄이기 위해 적용할 수 있는 '환경관리 전략'으로 가장 적합한 것은? [강의/교재]",
+      "o": [
+        "완벽주의를 버리고 스스로를 용서하는 '인지의 변화'를 시도한다.",
+        "점심시간에 조용한 음악을 들으며 '명상'을 한다.",
+        "과잉부담을 일으키는 원인을 사정하고, 우선순위를 정하여 덜 중요한 과제는 과감히 버리거나 타인에게 적절히 위임한다.",
+        "친구를 만나 상사를 욕하며 '정서중심적 대처'를 한다."
+      ],
+      "a": 2,
+      "h": "내 주변의 상황(업무량, 스케줄) 자체를 물리적으로 구조조정하는 것입니다.",
+      "e": "우선순위 설정, 불필요한 과제 버리기, 업무 위임하기, 거절하기 등은 시간과 책임을 재구성하여 스트레스 유발 환경 자체를 통제하는 '환경관리 전략'입니다."
+    },
+    {
+      "level": "중",
+      "q": "스트레스 상황 시 인체에서 일어나는 일반적인 호르몬 및 생리적 반응에 대한 설명으로 올바른 것은? [교재]",
+      "o": [
+        "소화효소 분비가 급증하여 위장이 빠르게 운동하며 식욕이 감퇴한다.",
+        "스트레스 호르몬인 코르티솔 분비가 증가하며, 이는 지방 섭취 욕구를 높이고 복부비만을 유발할 수 있다.",
+        "교감신경이 억제되고 부교감신경이 활성화되어 심박수가 급격히 느려진다.",
+        "혈당이 급격히 저하되어 전신 무력감으로 인해 즉각 수면에 빠지게 된다."
+      ],
+      "a": 1,
+      "h": "스트레스를 받으면 살이 찌고 배가 나오는 이유와 관련이 있습니다.",
+      "e": "스트레스 시 교감신경 흥분으로 심박수와 혈당은 상승하고 위장 운동은 정지됩니다. 특히 코르티솔은 에너지를 지방 형태로 뱃살에 축적시키는 주요 원인이 됩니다."
+    },
+    {
+      "level": "중",
+      "q": "대처 자원을 소모하지 않고 일상의 스트레스 저항력을 높이기 위해, 개인의 생활 속에서 권장되는 '균형과 리듬'의 구체적 사례는? [★★★ 워크북/교재]",
+      "o": [
+        "매일 기상 시간과 식사 시간을 예측 가능하게 유지하여 생체 리듬을 안정시킨다.",
+        "적응력을 높이기 위해 매주 수면 시간을 낮과 밤으로 번갈아 바꾼다.",
+        "매일 만나는 친구를 바꾸고 주거지를 한 달에 한 번씩 옮겨 신선함을 유지한다.",
+        "자녀의 장래를 완벽하게 통제하기 위해 매일 저녁 잔소리를 하는 일과를 넣는다."
+      ],
+      "a": 0,
+      "h": "신체와 마음은 '예측 가능한 패턴' 안에서 가장 편안함을 느끼고 에너지를 아낍니다.",
+      "e": "워크북 개념. 환경관리 전략에서 가장 기본은 '균형과 리듬이 있는 일상의 규칙'을 만드는 것입니다. 예측 불가능한 변화나 통제 불가능한 집착은 적응 에너지를 고갈시킵니다."
+    },
+    {
+      "level": "중",
+      "q": "다음 중 명상(Meditation)의 생리학적 효과로 교재에서 명시한 내용이 아닌 것은? [교재]",
+      "o": [
+        "교감신경계의 활성화를 감소시킨다.",
+        "심장박동수와 호흡 속도가 느려진다.",
+        "피로할 때 증가하는 혈류 내 유산(lactic acid) 농도가 낮아진다.",
+        "근육에 산소 공급을 차단하여 무산소 대사를 촉진한다."
+      ],
+      "a": 3,
+      "h": "명상은 몸을 편안하고 풍부한 산소 상태로 만듭니다.",
+      "e": "명상은 교감신경을 이완시켜 심박/호흡 감소, 산소 소모량 저하, 유산(피로물질) 농도 저하 등 심신의 평안한 이완 상태를 가져옵니다. 산소 차단은 틀린 설명입니다."
+    },
+    {
+      "level": "중",
+      "q": "자신의 스트레스 정도를 인식하고 통제하는 능력을 기르기 위해, 매일 일상에서 수행하는 '스트레스 인식일지(Stress log)' 작성법으로 올바른 것은? [강의/교재]",
+      "o": [
+        "최근 6주 이내 경험한 스트레스 사건의 종류, 발생 시기, 신체/정신적 증상 등을 약 2주간 꾸준히 구체적으로 기록한다.",
+        "스트레스를 받을 때마다 그 원인이 된 타인의 이름을 100번씩 적으며 저주한다.",
+        "과거 10년 전의 억울했던 기억만을 매일 반복해서 일기장에 적는다.",
+        "일지를 쓰는 것 자체가 스트레스이므로 1년에 한 번 연말에만 몰아서 대충 기억나는 대로 쓴다."
+      ],
+      "a": 0,
+      "h": "막연한 감정을 구체적인 데이터(원인, 증상, 기간)로 바꾸어 통찰하는 과정입니다.",
+      "e": "스트레스 일지는 최근의 구체적 사건과 그에 따른 자신의 특이적 반응(신체/정신적)을 약 2주 정도 지속적으로 기록하여 스스로의 취약점과 대처 패턴을 '객관적으로 통찰'하는 것이 목적입니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

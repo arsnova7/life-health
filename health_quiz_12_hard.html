@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [12강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제12강: 응급처치 1 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "다음 [사례]에서 최초 목격자인 A씨가 '생존사슬'의 원칙에 따라 취한 행동 중 잘못된 것은? [교재/강의 적용]\n[사례] 등산 중이던 A씨는 등산로에 쓰러진 50대 남성을 발견했다. 1) 먼저 어깨를 두드리며 반응을 확인했으나 의식이 없었다. 2) 주변의 다른 등산객에게 \"빨간 옷 입으신 분, 119에 신고해주시고, 파란 모자 쓰신 분은 주변 대피소에서 자동심장충격기를 가져와 주세요\"라고 요청했다. 3) 즉시 가슴 정중앙을 강하게 압박하며 심폐소생술을 시작했다. 4) 자동심장충격기가 도착하자, 전원을 켜고 패드를 부착한 뒤 분석이 끝날 때까지 환자의 가슴을 계속 멈추지 않고 압박했다.",
+      "o": [
+        "1) 어깨를 두드리며 반응 확인",
+        "2) 특정인을 지목하여 119 신고와 AED 요청",
+        "3) 가슴 정중앙 강하게 압박",
+        "4) AED 분석 중 가슴압박 지속"
+      ],
+      "a": 3,
+      "h": "기계가 심장을 스캔할 때 사람이 만지고 있으면 에러가 납니다.",
+      "e": "AED가 환자의 심전도를 분석하는 동안에는 분석 오류를 막기 위해 구조자 포함 모든 사람이 환자에게서 손을 떼고 물러나야 합니다(Clear). 따라서 4번 행동이 틀렸습니다."
+    },
+    {
+      "level": "상",
+      "q": "응급의료에 관한 법률에 따른 '선한 사마리아인 법'의 적용 범위를 가장 정확히 해석한 사례는? [강의 심화]",
+      "o": [
+        "의사가 자신의 병원 응급실에서 고의로 처치를 지연시켜 환자가 사망한 경우, 선한 사마리아인 법으로 무죄를 받는다.",
+        "일반인이 길에 쓰러진 심정지 환자에게 선의로 심폐소생술을 실시했으나 갈비뼈가 골절된 경우, 고의나 중과실이 없으므로 민/형사상 상해 책임을 면제받을 수 있다.",
+        "일반인이 환자의 지갑을 훔칠 목적으로 접근하여 심폐소생술을 하는 척하다가 환자를 방치한 경우 면책된다.",
+        "의료인이 근무 시간이 아닐 때 우연히 응급처치를 하였더라도, 의료인이므로 어떠한 상황에서도 100% 면책받지 못하고 처벌된다."
+      ],
+      "a": 1,
+      "h": "이 법의 핵심은 '업무수행 중이 아닌 일반인이나 의료인'이 '고의나 중과실 없이' '선의'로 행한 응급처치에 대한 보호입니다.",
+      "e": "응급의료 종사자가 업무 중 발생시킨 과실이나, 고의적 불법 행위는 면책 대상이 아닙니다. 일반인(또는 비번인 의료인)이 생명이 위급한 자에게 선의로 행한 처치 중 발생한 불가피한 손상(골절 등)에 대해 책임을 면제하는 것이 핵심입니다."
+    },
+    {
+      "level": "상",
+      "q": "기본소생술(BLS)과 전문소생술(ACLS)의 임상적 연관성과 생존사슬에서의 역할을 가장 과학적으로 서술한 것은? [★★★ 워크북/강의 융합]",
+      "o": [
+        "기본소생술은 산소 공급을 완전히 중단시키므로, 무조건 119가 올 때까지 기다렸다가 전문소생술만 단독으로 시행하는 것이 생존율을 100% 높인다.",
+        "심정지 환자를 치료하려면 전문소생술이 필요하나, 이는 반드시 신속한 현장 기본소생술(가슴압박 등)의 토대 위에서 이어져야만 뇌손상을 막고 자발순환회복의 효과를 볼 수 있다.",
+        "일반인에 의한 기본소생술과 의료진의 전문소생술은 전혀 무관한 별개의 사슬이므로, 병원에서는 현장 처치 내용을 묻지 않는다.",
+        "전문소생술은 오직 자동심장충격기(AED) 전원을 켜는 과정만을 의미한다."
+      ],
+      "a": 1,
+      "h": "밑 빠진 독에 물 붓기처럼, 현장에서 피를 돌려놓지 않으면 나중에 아무리 좋은 약을 써도 뇌는 이미 죽어있습니다.",
+      "e": "전문소생술(약물 투여, 전문 기도 유지 등)은 강력하지만, 초기 4~5분 내에 실시된 기본소생술(BLS)로 뇌와 심장에 최소한의 혈액이 유지되지 않았다면 성공할 수 없습니다. 즉, BLS는 ACLS의 필수적인 토대입니다."
+    },
+    {
+      "level": "상",
+      "q": "기도폐쇄 응급처치 시 '환자의 연령과 의식 상태'에 따른 중재 알고리즘으로 올바르게 연결된 것은? [교재/강의 복합 추론]",
+      "o": [
+        "의식 있는 성인 완전 기도폐쇄 -> 하임리히법(서서 복부 밀쳐 올리기) / 의식 없는 성인 기도폐쇄 -> 변형된 하임리히법(눕혀서) 또는 심폐소생술",
+        "의식 있는 6개월 영아 완전 기도폐쇄 -> 성인과 동일한 하임리히법 / 의식 없는 영아 -> 119 신고 없이 방치",
+        "의식 있는 성인 부분 기도폐쇄(기침 가능) -> 즉시 등을 세게 내리침 / 의식 없는 성인 -> 스피커폰 끄고 혼자 해결",
+        "모든 연령층의 기도폐쇄 -> 즉시 물을 1리터 이상 마시게 하여 이물질을 강제로 넘김"
+      ],
+      "a": 0,
+      "h": "나이(성인 vs 영아)와 의식(유 vs 무)에 따라 처치가 완전히 달라집니다.",
+      "e": "성인은 의식이 있으면 서서 하임리히법, 의식이 없으면 눕혀서 변형 하임리히법/심폐소생술을 합니다. 영아는 등 두드리기, 스스로 기침이 가능하면 기침 격려, 물 먹이기는 절대 금지입니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 과거 기출문제 파일(2015년 Q31 등)에 자주 등장했던 '결핵의 예방과 치료, 증상'이나 '당뇨병의 종류' 관련 문항을 12강(응급처치 1) 퀴즈로 제출하는 것에 대한 출제 위원의 판단으로 올바른 것은?",
+      "o": [
+        "기출문제이므로 반드시 12강 퀴즈에 변형하여 출제해야 한다.",
+        "결핵과 당뇨도 응급상황을 유발할 수 있으므로 응급처치 챕터에 포함시켜야 한다.",
+        "제공된 12강 소스 텍스트(응급의료체계, 심폐소생술, 기도폐쇄 등)에는 결핵이나 당뇨병 이론이 전혀 없으므로 '과거의 유물' 및 타 단원 내용으로 간주하여 전면 삭제(필터링)해야 한다.",
+        "하임리히법 대신 당뇨 망막병증 치료법을 플래시카드로 만든다."
+      ],
+      "a": 2,
+      "h": "출제 제1원칙: '현재 개편된 교재 소스에 없는 것은 절대 내지 마라.'",
+      "e": "과거 기출 파일에는 결핵, 당뇨 등 질병 파트가 섞여 있으나, 현재 검토 중인 12강(응급처치 1) 소스에는 응급의료체계, CPR, 하임리히법만 존재하므로 출제에서 철저히 배제하는 것이 원칙입니다."
+    },
+    {
+      "level": "상",
+      "q": "심폐소생술 중 자동심장충격기(AED)의 작동 원리인 '심실 세동(Ventricular fibrillation) 제거'의 병태생리학적 의미를 가장 잘 설명한 것은? [강의 추론]",
+      "o": [
+        "심장이 완전히 멈춰서 아무런 전기가 흐르지 않는 상태(무수축)를 전기로 억지로 태워버리는 것이다.",
+        "심장 근육이 질서 있게 수축하지 못하고 비정상적이고 미세하게 파르르 떨고만 있는 상태(세동)에 강력한 직류 전기를 가해, 순간적으로 심장을 리셋시킨 후 다시 정상적인 전기 신호로 심장이 뛰도록 유도하는 것이다.",
+        "전기를 가해 뇌세포를 직접 자극함으로써 환자가 통증을 느끼고 깨어나게 하는 각성 요법이다.",
+        "배터리를 이용해 체온을 급격히 40도 이상으로 올려 혈액순환을 촉진하는 온열 요법이다."
+      ],
+      "a": 1,
+      "h": "마치 컴퓨터가 렉(오류)이 걸려 버벅거릴 때, 전원 코드를 뺐다 꽂아서 재부팅(Reset)시키는 원리와 같습니다.",
+      "e": "AED의 '세동 제거(제세동)'는 심장이 비정상적으로 떨고 있는(세동) 상태를 전기로 멈추게 한 뒤, 심장 고유의 페이스메이커가 다시 정상 박동을 지휘하도록 리셋(Reset)하는 과정입니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 2017년 기출 Q23: \"심장질환은 혈전을 생성시켜 뇌출혈을 초래할 위험이 있다. / 뇌졸중을 초기에 발견하여 치료하면 후유증이나 합병증을 최소화 할 수 있다.\" 이 문제 지문을 12강 퀴즈로 활용할 수 있는가?",
+      "o": [
+        "활용할 수 없다. 뇌졸중은 12강(응급처치 1) 소스 텍스트에 포함되지 않은 질환 파트 내용이므로 원칙에 따라 필터링해야 한다.",
+        "활용할 수 있다. 뇌졸중도 응급실에 가야 하므로 무조건 12강에 넣는다.",
+        "활용할 수 없다. 뇌졸중은 질병이 아니라 사고이기 때문이다.",
+        "활용할 수 있다. 심장질환이 심폐소생술의 원인이 되기 때문이다."
+      ],
+      "a": 0,
+      "h": "주어진 소스 문서 12강 PDF와 MP3에 '뇌졸중'이라는 단어가 있는지 검색해 보세요. 없습니다.",
+      "e": "과거 기출문제 파일은 전 범위 모의고사 형태이므로 뇌졸중 등 심혈관계 질환 지문이 포함되어 있으나, 제공된 12강 소스에는 없으므로 출제에서 배제합니다."
+    },
+    {
+      "level": "상",
+      "q": "응급의료 전달체계의 '병원 단계'에서 전문응급센터(외상, 화상, 심혈관센터 등)로의 '전원(Transfer)' 결정이 이루어지는 가장 타당한 의학적 이유는? [교재/워크북 추론]",
+      "o": [
+        "환자의 진료비를 더 많이 청구하기 위해 병원을 자주 옮기는 것이다.",
+        "모든 응급실이 24시간 운영되지 않기 때문에 밤에는 문을 닫기 때문이다.",
+        "환자의 응급처치에 필수적인 특수 의료진, 첨단 시설, 전문 처치(Specialty care) 장비가 최초 이송된 병원에 부족할 경우, 환자의 생존율을 극대화할 수 있는 적절한 등급의 병원으로 신속히 연결하기 위함이다.",
+        "119 구급대원이 단순히 병원 길을 잘못 찾아 다른 곳으로 다시 가는 과정이다."
+      ],
+      "a": 2,
+      "h": "중증 외상 환자는 일반 동네 응급실보다는 '권역외상센터'에서 수술을 받아야 살 확률이 높습니다.",
+      "e": "응급의료기관은 가용 자원이나 특수 처치 가능성에 따라 등급화되어 있습니다. 환자에게 고도의 전문 처치(수술, 중환자 관리 등)가 필요할 경우, 이를 갖춘 전문센터로 전원(Transfer)하는 것이 생명 구조에 필수적입니다."
+    },
+    {
+      "level": "상",
+      "q": "심폐소생술 중 '인공호흡'을 위해 기도를 개방하는 과정에서 발생할 수 있는 합병증과 이를 예방하기 위한 올바른 술기를 가장 잘 설명한 것은? [강의 심화]",
+      "o": [
+        "이마를 강하게 누르면 경추 골절이 무조건 발생하므로, 이마에 손을 대지 말고 오직 턱만 잡아당긴다.",
+        "턱밑의 부드러운 살(연부조직)을 강하게 누르면 기도가 압박되어 오히려 숨길이 폐쇄될 수 있으므로, 반드시 턱끝의 단단한 뼈 부분만을 들어 올려야 한다.",
+        "입술을 너무 크게 벌리면 턱관절이 탈구되므로, 코로만 인공호흡을 하는 것이 전 세계적인 유일한 표준이다.",
+        "인공호흡 시 폐가 찢어지는 것을 막기 위해 코를 절대 막지 않고 개방해둔다."
+      ],
+      "a": 1,
+      "h": "턱을 들어 올릴 때 손가락이 연한 목살을 파고들면, 그 살이 기도(숨통)를 짓눌러버립니다.",
+      "e": "Head tilt - chin lift(머리 기울임-턱 들어올리기) 시 손가락이 턱밑 연부조직을 누르면 기도 폐쇄를 유발하므로, 턱뼈(하악골)의 끝부분을 지지하여 들어 올리는 것이 핵심 술기입니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 2016 기출 Q41: \"나이가 40세인 경우 최대 심박동수는?\" 이 문항의 12강 퀴즈 출제 여부 판단은?",
+      "o": [
+        "12강 교재와 워크북에 최대 심박동수 공식(220-나이)이 명시되어 있으므로 출제한다.",
+        "심정지 시 심박수를 알아야 하므로 CPR 퀴즈로 변형하여 출제한다.",
+        "해당 문항은 '운동과 건강' 등 타 단원의 내용이며, 12강(응급처치 1) 소스에는 언급되지 않은 과거의 유물이므로 무조건 삭제한다.",
+        "자동심장충격기(AED)의 정상 맥박 세팅 값 문제로 변형한다."
+      ],
+      "a": 2,
+      "h": "현재 소스에 없는 내용은 과감히 버려야 합니다.",
+      "e": "최대 심박수 계산은 운동처방 파트의 지식으로, 주어진 12강 응급처치(CPR, 하임리히 등) 텍스트에는 존재하지 않으므로 원칙에 따라 필터링하여 삭제합니다."
+}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

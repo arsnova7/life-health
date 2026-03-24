@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [9강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제9강: 정신건강의 이해와 관리 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "중", "q": "정신건강 상태가 가장 양호한 것으로 평가되는 임상적 반응은? [★★★ 워크북 연습문제]",
+      "o": [
+        "환경 변화에 대해 극도로 과민하게 반응하여 분노를 표출한다.",
+        "불안으로 인해 소화불량 등 심각한 신체증상을 습관적으로 나타낸다.",
+        "사소하게 변화된 환경으로 인해 장기간 잠을 이루지 못하고 고통스러워한다.",
+        "삶의 위기상황에 당황스럽고 힘들지만, 적절한 스트레스 관리와 대처 기전으로 극복한다."
+      ],
+      "a": 3,
+      "h": "건강한 사람도 스트레스를 받지만, 그것을 뚫고 나가는 회복탄력성이 있습니다.",
+      "e": "워크북 연습문제. 통합력과 적응력이 높은 정신건강 양호 상태는 위기 상황에 무조건 무감각한 것이 아니라, 그 상황을 이성적으로 대처하고 적응하는 능력을 말합니다."
+    },
+    {
+      "level": "중",
+      "q": "마리 야호다의 정신건강 평가기준 중 '자율성(Autonomy)'에 대한 설명으로 가장 적합한 것은? [2015년 기출 응용/교재]",
+      "o": [
+        "내·외적 갈등 사이에서 기분과 감정 조절의 균형을 완벽히 이룬 상태이다.",
+        "스스로 판단하고 결정하며, 자신의 의사결정과 행동에 대해 스스로 책임지는 능력이다.",
+        "객관적으로 현실을 지각하고 타인의 감정에 깊이 공감하는 능력이다.",
+        "새로운 사람과 쉽게 우정을 맺고 사회적 역할을 완벽히 연기하는 기술이다."
+      ],
+      "a": 1,
+      "h": "타인에게 끌려다니지 않고 내 삶의 주인이 되는 것입니다.",
+      "e": "자율성은 자기결정, 독립성, 스스로의 판단에 대한 책임수용 등을 포괄하는 기준입니다. 갈등 조절은 '통합', 객관적 파악은 '현실지각'입니다."
+    },
+    {
+      "level": "중",
+      "q": "마리 야호다의 정신건강 평가기준 중 '통합(Integration)'의 개념을 임상 상황에 맞게 해석한 것은? [2016년 기출 변형/교재]",
+      "o": [
+        "스트레스와 불안을 견디고 대처하며, 내적 충동과 외적 요구 사이에서 조화로운 균형을 이루는 강하고 융통성 있는 자아의 능력",
+        "자신에 대한 객관적 인식과 자기개방을 통해 있는 그대로의 나를 무조건적으로 맹신하는 태도",
+        "타인의 도움 없이 산속에 고립되어 혼자서 완벽하게 자급자족하는 경제적 독립 능력",
+        "공감 능력을 발휘하여 타인의 모든 요구에 100% 무비판적으로 순응하는 태도"
+      ],
+      "a": 0,
+      "h": "여러 흩어진 감정과 스트레스를 하나로 잘 모아서 부러지지 않게 유연하게 대처하는 힘입니다.",
+      "e": "통합(Integration)은 내·외적 갈등, 억압과 표현, 스트레스 저항력 등의 밸런스를 맞추어 변화를 통해 성장할 수 있는 자아의 융통성을 뜻합니다."
+    },
+    {
+      "level": "중",
+      "q": "교류분석이론(에릭 번)의 자아상태(Ego state) 중, 상황을 객관적으로 분석하고 이성적, 합리적으로 대처하여 원활한 대인관계의 중심이 되는 자아상태는? [강의/교재]",
+      "o": [
+        "비평적 부모 자아상태",
+        "양육적 부모 자아상태",
+        "성인 자아상태(Adult)",
+        "자유로운 아동 자아상태"
+      ],
+      "a": 2,
+      "h": "감정에 치우치거나 남을 가르치려 들지 않는 '어른'의 모습입니다.",
+      "e": "성인 자아상태는 감정이나 편견에 치우치지 않고 객관적 정보 분석과 이성적 판단을 내리는 가장 성숙한 형태의 자아입니다."
+    },
+    {
+      "level": "중",
+      "q": "질문하기 기법의 활용에 대한 간호 중재 교육 중 가장 바람직한 조언은? [교재/강의]",
+      "o": [
+        "상대방의 굳게 닫힌 마음을 열기 위해서는 빈틈없이 취조하듯 연속적으로 직접 질문을 던져야 한다.",
+        "다양하고 자유로운 반응을 끌어내기 위해 '예/아니오'로만 답할 수 있는 폐쇄적 질문을 주로 사용한다.",
+        "상대방의 행동 이유가 궁금할 때는 '도대체 왜 그렇게 행동했습니까?'라고 즉각적으로 따져 묻는다.",
+        "'……에 대해 알고 싶습니다'와 같이 물음표가 없거나 강도가 약한 간접질문을 활용하면 심리적 부담을 줄일 수 있다."
+      ],
+      "a": 3,
+      "h": "질문은 칼이 아니라 부드러운 손길이 되어야 합니다.",
+      "e": "직접적이고 강압적인 질문('왜')이나 지나친 폐쇄적 질문은 대화의 문을 닫게 합니다. 부드러운 간접질문과 개방형 질문이 상대의 마음을 여는 데 효과적입니다."
+    },
+    {
+      "level": "중",
+      "q": "다음 중 매슬로(Maslow)의 욕구계층이론에 대한 설명으로 올바르지 않은 것은? [교재]",
+      "o": [
+        "인간의 욕구는 생리적 욕구에서 시작하여 자아실현의 욕구로 위계적으로 발전한다.",
+        "하위 욕구가 어느 정도 충족되어야 상위 욕구를 갈망하게 되는 경향이 있다.",
+        "안전 욕구는 위험으로부터의 보호, 질서, 안정성을 추구하는 단계이다.",
+        "자아존중감 욕구가 완전히 무시되더라도 자아실현은 아무런 장애 없이 완벽하게 이루어진다."
+      ],
+      "a": 3,
+      "h": "기초 공사가 부실한 건물은 꼭대기 층을 올릴 수 없습니다.",
+      "e": "매슬로 이론에 따르면 존중과 인정(자아존중감)이 결여되면 열등감에 빠져 최상위인 자아실현 단계로 성숙하게 도약하기 매우 어렵습니다."
+    },
+    {
+      "level": "중",
+      "q": "갈등해결 기법인 '나 전달법(I-message)'의 3가지 핵심 구성 요소로 올바르게 짝지어진 것은? [교재]",
+      "o": [
+        "상대방에 대한 인신공격 - 과거의 잘못 들추기 - 완벽한 보상 요구",
+        "비난 없는 상황 진술 - 상대방 행동이 나에게 미친 결과 진술 - 내가 느끼는 감정 진술",
+        "내 감정 억압 - 무조건적인 용서 - 철저한 자기반성",
+        "폐쇄적 질문 - 적극적 경청 - 무언의 압박"
+      ],
+      "a": 1,
+      "h": "너의 [행동] 때문에 -> 나에게 [결과]가 생겨서 -> 나는 [감정]을 느낀다.",
+      "e": "나 전달법은 1) 수용할 수 없는 행동의 객관적 기술, 2) 그 행동이 미친 실제적 결과, 3) 그로 인해 내가 느끼는 감정을 세트로 전달하여 반발심 없이 대화하는 기법입니다."
+    },
+    {
+      "level": "중",
+      "q": "로저스(Rogers)가 묘사한 '충분히 기능하여 자기 성장과 성취를 이룬 사람'의 성격 특성과 거리가 먼 것은? [교재 표 4-2]",
+      "o": [
+        "자신에게 인위적 목표를 부과하는 타인들을 즐겁게 하려 노력하며 눈치를 살핀다.",
+        "자신을 신뢰하고 존중하며 용감하게 자신을 새로운 방식으로 표현한다.",
+        "자율적이고 자기지향적이며 자신의 행동에 책임감이 있다.",
+        "자기에 진실하지 않은 허울이나 가식에 관심이 없다."
+      ],
+      "a": 0,
+      "h": "타인의 꼭두각시가 되는 것은 자기 성장과 정반대의 길입니다.",
+      "e": "로저스의 충분히 기능하는 사람은 타인의 기대나 인위적 목표에 끌려다니며 남을 기쁘게 하려는 강박(타인 지향)에서 벗어나 자율적이고 주도적인 삶을 삽니다."
+    },
+    {
+      "level": "중",
+      "q": "마리 야호다의 정신건강 평가기준에서 단일 기준의 적용을 비판하고 종합적 접근을 요구한 이유로 가장 타당한 것은? [강의/교재]",
+      "o": [
+        "인간은 오직 생리적 욕구 한 가지만으로 작동하는 단순한 기계이기 때문이다.",
+        "정신건강은 질병 유무만으로 100% 명확하게 재단될 수 있는 수학적 공식이기 때문이다.",
+        "정신건강은 다차원적이고 연속선상에 있는 복합적 개념이므로, 하나의 기준만으로는 개인의 전체적 기능과 맥락을 온전히 평가할 수 없기 때문이다.",
+        "단일 기준을 쓰면 계산이 너무 복잡해져서 전문가들이 기피하기 때문이다."
+      ],
+      "a": 2,
+      "h": "인간은 복잡한 유기체이므로 한 가지 자로만 잴 수 없습니다.",
+      "e": "정신건강은 추상적이고 포괄적이며 연속적인 상태를 의미하므로, 한 가지 절대적 잣대가 아니라 6가지 다차원적 기준을 종합하여 평가해야 객관성과 유연성을 확보할 수 있습니다."
+    },
+    {
+      "level": "중",
+      "q": "일상생활에서 일반적인 건강상태(정신건강 포함)를 스스로 평가하는 설문지 활용 목적에 대한 설명 중 가장 적합한 것은? [교재]",
+      "o": [
+        "총점이 일정 수준을 넘으면 정신과 폐쇄병동에 즉시 강제 입원시키기 위한 법적 증거로 쓴다.",
+        "현재의 상태를 이전과 비교하여 자신의 구체적 취약 항목을 파악하고, 이를 바탕으로 주도적인 건강관리 계획을 세워 실천하기 위함이다.",
+        "자신의 불행감을 증명하여 주변 사람들에게 경제적 보상을 강요하기 위함이다.",
+        "오직 신체적 질병(암, 당뇨 등)의 발생 유무만을 100% 정확하게 진단해내기 위함이다."
+      ],
+      "a": 1,
+      "h": "평가는 반성과 개선을 위한 나침반입니다.",
+      "e": "건강상태 평가 척도는 질병 진단용이 아니라, 자신의 내·외적 스트레스와 감정 상태를 통찰(Self-reflection)하고 보다 향상된 정신건강 전략을 짜기 위한 자기 관리 도구입니다."
+    },
+    {
+      "level": "중",
+      "q": "보건복지부의 '정신건강 10대 수칙'에 포함된 행동 지침으로 올바른 것은? [교재]",
+      "o": [
+        "하루 세끼는 생존을 위해 10분 이내로 빠르게 마신다.",
+        "약속 시간은 항상 정각에 맞춰 아슬아슬하게 도착한다.",
+        "상대방의 입장은 무시하고 오직 나의 권리만을 주장한다.",
+        "반가운 마음을 담아 인사하고 일부러라도 웃는 표정을 짓는다."
+      ],
+      "a": 3,
+      "h": "작은 실천이 마음의 온도를 높입니다.",
+      "e": "10대 수칙에는 '천천히 식사하기', '여유 있게 약속장소 가기', '상대방 입장 생각하기', '웃는 표정 짓기', '반갑게 인사하기' 등이 포함되어 일상의 긍정적 에너지를 강조합니다."
+    },
+    {
+      "level": "중",
+      "q": "대인관계에서 발생하는 갈등의 속성을 올바르게 이해한 것은? [교재]",
+      "o": [
+        "갈등은 정신적으로 미성숙한 사람들에게만 발생하는 비정상적 현상이다.",
+        "감정, 사고, 기대가 다른 인간들이 모이면 갈등이 발생하는 것은 당연하고 불가피한 과정이다.",
+        "갈등이 생기면 이성적 판단이 불가능하므로 무조건 내가 양보해야 평화가 유지된다.",
+        "갈등은 오직 폐쇄형 질문만으로 완벽하게 해결될 수 있다."
+      ],
+      "a": 1,
+      "h": "갈등 자체가 나쁜 것이 아니라, 갈등을 푸는 방식이 중요합니다.",
+      "e": "모든 사람은 다르고 각자의 '안경'이 있으므로 갈등의 불가피성을 자연스럽게 수용하고 해결책을 찾아가는 태도가 건강한 인간관계의 첫걸음입니다."
+    },
+    {
+      "level": "중",
+      "q": "매슬로(Maslow)가 제시한 '생존적 경향'과 '실현적 경향'을 정신건강과 연관 지어 가장 잘 해석한 것은? [강의 추론]",
+      "o": [
+        "생존적 경향(생리, 안전)이 완전히 박탈되어야만 헝그리 정신으로 실현적 경향이 극대화되어 자아실현에 도달한다.",
+        "생존적 경향이 어느 정도 안정적으로 충족될 때, 인간 본연의 성장 욕구인 실현적 경향(자아실현, 인지적 욕구)이 발현되며 최상의 정신건강 상태로 이어진다.",
+        "생존적 경향은 동물에게만, 실현적 경향은 성인에게만 독점적으로 존재한다.",
+        "실현적 경향은 폭력적이고 파괴적인 본능이므로 철저히 억압해야 정신이 건강해진다."
+      ],
+      "a": 1,
+      "h": "곳간에서 인심 난다는 속담처럼, 기본이 채워져야 위를 바라볼 수 있습니다.",
+      "e": "생리적, 안전적 생존 기반이 마련될 때 인간은 배움, 미적 추구, 자아실현 등 상위의 실현적 경향으로 나아가게 되며, 이것이 곧 정신적 성숙과 직결됩니다."
+    },
+    {
+      "level": "중",
+      "q": "마리 야호다의 정신건강 평가기준 중 '자신에 대한 태도'에서 가장 경계해야 할 심리적 태도는? [교재/강의]",
+      "o": [
+        "자신의 장점과 단점을 있는 그대로 객관적으로 바라보는 자기인식",
+        "자신을 지나치게 주관적이고 환상적으로 포장하여 맹신하는 태도",
+        "자신의 감정과 생각을 숨기지 않고 타인에게 적절히 표현하는 자기개방",
+        "불완전한 자신을 너그럽게 수용하고 보듬는 태도"
+      ],
+      "a": 1,
+      "h": "자신을 수용하는 것은 좋지만, 현실 감각을 잃은 과대망상은 위험합니다.",
+      "e": "건강한 자아 태도는 '객관성'과 '현실성'을 바탕으로 있는 그대로를 수용하는 것입니다. 왜곡된 포장이나 비현실적인 주관적 맹신은 바람직한 자기수용이 아닙니다."
+    },
+    {
+      "level": "중",
+      "q": "갈등해결 기법 중 '타협(Compromise)'을 시도할 때 주의할 점으로 알맞은 것은? [교재]",
+      "o": [
+        "무조건 내 요구를 100% 관철시킬 때까지 상대방을 언어적으로 제압한다.",
+        "타협할 수 없는 치명적 문제인지 분별하고, 양보할 수 있는 사안이라면 서로 만족할 교집합을 모색한다.",
+        "타협은 지는 것이므로 협상 테이블을 즉시 엎어버린다.",
+        "상대방의 관심사는 무시하고 철저히 나의 이익만 숫자로 계산하여 제시한다."
+      ],
+      "a": 1,
+      "h": "타협은 반보씩 물러나 함께 앞으로 나아가는 기술입니다.",
+      "e": "모든 문제가 타협 가능한 것은 아니므로 먼저 분별해야 하며, 타협 시에는 이기려는 목적보다 상호 만족(Win-Win) 대안을 찾는 경청의 자세가 필요합니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

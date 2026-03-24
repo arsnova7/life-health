@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [13강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제13강: 응급처치 2 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "다음 [사례]의 환자에게 적용된 처치 중 한랭질환(저체온/동상) 응급처치 원칙에 완전히 **위배되는 것**은? [교재/강의 심화 적용]\n[사례] 등산 중 조난당한 B씨(60대)가 구조되었다. B씨는 중심체온이 34도로 떨어져 몸을 심하게 떨고 있었고, 젖은 등산화를 신은 양발은 동상이 의심되어 감각이 없었다. 구조대원은 다음과 같이 처치했다.\n1) B씨의 젖은 양말과 옷을 즉시 벗기고 뽀송한 담요로 몸을 감쌌다.\n2) 언 발을 녹이기 위해 산장에 피워둔 모닥불 앞에 발을 아주 바짝 대어 강한 복사열을 쬐게 했다.\n3) 따뜻한 코코아 등 뜨겁지 않은 음료를 조금씩 마시게 했다.\n4) 환자에게 술(소주)을 권하지 않았다.",
+      "o": [
+        "1) 젖은 옷을 벗기고 담요 덮기",
+        "2) 모닥불 앞에 발을 바짝 대어 직접 열 가하기",
+        "3) 따뜻한 단 음료 제공하기",
+        "4) 음주 제한하기"
+      ],
+      "a": 1,
+      "h": "얼어붙은 발은 감각이 없어 살이 타들어 가도 모릅니다.",
+      "e": "동상 부위는 신경이 마비되어 통증/온도를 느끼지 못합니다. 이때 모닥불, 난로, 헤어드라이어, 핫팩 등 강한 '직접 열'을 가하면 3~4도 심부 화상을 입어 절단에 이르게 되므로 절대 금기이며, 38~42도의 물에 서서히 담가 해동(Rewarming)하는 것이 정석입니다."
+    },
+    {
+      "level": "상",
+      "q": "13강 워크북 연습문제 연계: 응급환자 발견 시 생존사슬(Chain of survival)과 기본소생술(BLS) 절차에 대한 설명으로 가장 과학적인 것은? [★★★ 워크북 연습문제 종합]",
+      "o": [
+        "의식이 없는 환자라도 호흡을 확인하기 전 무조건 가슴 정중앙에 AED 패드부터 부착하여 1시간 동안 분석만 실시한다.",
+        "환자의 반응이 없을 때 119 신고와 구급대 파견만 기다리고 현장에서는 절대 가슴압박을 시행하지 않는 것이 심정지 조기발견의 핵심 원칙이다.",
+        "생존사슬 중 119 신고와 신속한 심폐소생술(가슴압박)은 골든타임 4~5분 이내에 목격자인 일반인에 의해 이루어질 때 뇌손상을 최소화할 수 있는 가장 핵심적이고 필수적인 행위이다.",
+        "가슴압박 속도는 분당 30회 이하로 아주 천천히 실시하여 환자의 갈비뼈가 휴식할 시간을 충분히 주어야 한다."
+      ],
+      "a": 2,
+      "h": "심폐소생술의 가장 첫 단추는 내 옆의 누군가가 5분 안에 심장을 펌핑해주는 것입니다.",
+      "e": "심정지 후 4~5분 이내에 BLS가 이루어지지 않으면 비가역적 뇌손상이 진행되므로, 119 신고와 즉각적인 현장 목격자의 가슴압박(CPR) 연계가 생존사슬의 성패를 가릅니다. 가슴압박은 분당 100~120회로 빠르고 강하게 실시해야 합니다."
+    },
+    {
+      "level": "상",
+      "q": "코피(비출혈) 응급처치 시 '머리를 뒤로 젖히지 않고 앞으로 숙이게 하는' 지침의 해부생리학적 근거로 적합하지 않은 것은? [강의/교재 복합 추론]",
+      "o": [
+        "혈액이 식도를 타고 위장으로 대량 유입되면 위 점막을 자극하여 극심한 오심과 구토를 유발하기 때문이다.",
+        "혈액이 후두를 넘어 기도로 흡인(Aspiration)될 경우 질식이나 심각한 흡인성 폐렴을 초래할 수 있기 때문이다.",
+        "머리를 앞으로 숙여야 혈액이 체외로 배출되어 출혈량을 정확히 가늠할 수 있기 때문이다.",
+        "머리를 앞으로 숙이면 뇌의 혈류가 멈춰 즉각적인 기절을 유도하여 통증을 못 느끼게 하기 때문이다."
+      ],
+      "a": 3,
+      "h": "머리를 숙인다고 뇌에 피가 안 가서 기절하지는 않습니다.",
+      "e": "머리를 젖히면 피가 후비공을 통해 식도로 넘어가 구토(1번)를 유발하거나 기도로 들어가 질식/폐렴(2번)을 유발합니다. 또한 출혈량 모니터링(3번)을 위해서라도 뱉어내는 것이 맞습니다. 4번의 기절 유도는 완전히 허구적인 설명입니다."
+    },
+    {
+      "level": "상",
+      "q": "열사병(Heat stroke)이 열탈진(일사병)이나 열경련과 차별화되는 가장 핵심적이고 치명적인 병태생리적 징후 2가지는? [★★★ 워크북 연습문제 응용]",
+      "o": [
+        "중심체온 저하(34도)와 극심한 배고픔 호소",
+        "중심체온 급상승(40도 이상)과 중추신경계 이상(의식 장애, 발작 등)",
+        "국소적인 종아리 근육 통증과 심한 땀 배출",
+        "일시적인 두통과 단순한 타는 듯한 갈증"
+      ],
+      "a": 1,
+      "h": "사병(죽을 병)은 뇌의 온도조절중추 자체가 망가져 몸이 불덩이처럼 끓어오르고 의식을 잃는 상태입니다.",
+      "e": "단순한 염분/수분 부족인 열경련이나 열탈진과 달리, 열사병은 인체의 체온조절기능 자체가 마비되어 땀이 나지 않고(건조한 고열) 40℃ 이상의 고체온과 중추신경계 이상(혼수, 경련)을 동반하는 응급 질환입니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 과거 기출문제(2017년 Q37) \"주로 가공식품에 함유되어 있고 심혈관계 질환에 해로워 섭취 제한량이 2.0mg 이하인 지방은 무엇인가? (정답: 트랜스지방)\" 이 문항을 13강(응급처치 2) 퀴즈로 활용하는 것에 대한 출제 위원의 판단은?",
+      "o": [
+        "해당 문항은 영양학 파트의 내용이므로, 현재 제공된 13강(환경 응급질환, 안/구강질환 등) 출제 범위에 해당하지 않아 완전히 삭제해야 한다.",
+        "영양 결핍이 저체온증을 유발할 수 있으므로 트랜스지방을 저체온증 원인으로 연계하여 출제한다.",
+        "기출문제이므로 무조건 13강 퀴즈 1번으로 배치한다.",
+        "트랜스지방 대신 칸디다균으로 이름을 바꾸어 출제한다."
+      ],
+      "a": 0,
+      "h": "출제 1원칙: '현재 제공된 해당 강(13강) 소스에 없는 내용은 과거의 유물이므로 절대 내지 마라.'",
+      "e": "과거 기출문제 파일에는 다양한 챕터(식생활, 영양, 만성질환 등)가 섞여 있습니다. 트랜스지방이나 식단 관련 내용은 영양 파트(앞 단원)이므로 13강 응급처치 소스에는 없습니다. 철저한 필터링 원칙에 따라 삭제하는 것이 맞습니다."
+    },
+    {
+      "level": "상",
+      "q": "응급상황 시 이물질에 의한 기도폐쇄와 안구 내 이물질 박힘(안구 천공성 외상) 처치에 있어서, 공통적으로 적용되는 대원칙(Golden Rule) 중 하나는 무엇인가? [강의/교재 심화 추론]",
+      "o": [
+        "이물질이 깊이 박혀 고정되어 있다면, 의료진이 아닌 일반인이 현장에서 함부로 잡아 뽑거나 억지로 꺼내려 해서는 안 되며(Do not pull out), 2차 손상 예방이 최우선이다.",
+        "이물질을 발견하면 현장의 모든 수단(날카로운 핀셋, 옷핀 등)을 동원해 환자가 고통을 호소하더라도 즉각적으로 강제 추출해야 한다.",
+        "이물질 주변을 차가운 얼음물로 거세게 세척하여 마취 효과를 준다.",
+        "이물질을 덮고 있는 모든 피부 조직을 칼로 절개하여 공기를 통하게 한다."
+      ],
+      "a": 0,
+      "h": "깊이 박힌 무언가를 억지로 빼면 댐의 수문이 무너지고 신경이 찢겨 나가는 것과 같은 재앙이 발생합니다.",
+      "e": "눈에 박힌 쇳가루나 깊이 박힌 흉기 등 고정된 이물질(Impaled object)은 그것 자체가 출혈을 막고 있는 마개 역할을 하거나, 빼낼 때 2차적 인접 조직 손상을 유발하므로 현장에서는 절대 뽑지 않고 흔들리지 않게 고정한 채 수술실로 이송하는 것이 대원칙입니다."
+    },
+    {
+      "level": "상",
+      "q": "저체온증(Hypothermia) 환자에게 알코올(술)을 투여하지 말아야 하는 혈역학적(Hemodynamic) 기전은 무엇인가? [강의 심화]",
+      "o": [
+        "알코올은 위산 분비를 억제하여 음식물의 열량 흡수를 100% 차단하기 때문이다.",
+        "알코올은 간세포를 즉시 괴사시켜 응고인자 생성을 1분 내로 중단시키기 때문이다.",
+        "알코올은 말초혈관을 강력하게 이완(확장)시켜 피부 표면으로 혈류량을 증가시키고, 이로 인해 생명 유지에 필수적인 내부 장기의 '중심체온(심부열)'이 체표면을 통해 대기 중으로 급격히 방출(열손실)되도록 만들기 때문이다.",
+        "알코올이 뇌의 호흡중추를 마비시켜 즉각적인 심장마비만 유발하기 때문이다."
+      ],
+      "a": 2,
+      "h": "추울 때 술을 마시면 얼굴이 화끈거리는 이유는 핏줄이 늘어나 몸 안의 열이 밖으로 새어 나오기 때문입니다. 결국 속은 더 차가워집니다.",
+      "e": "추위에 노출되면 인체는 생존을 위해 말초혈관을 수축시켜 피부로 가는 혈류를 줄이고 심부(심장, 뇌)의 열을 보존합니다. 술을 마시면 이 방어기전이 풀려 말초혈관이 확장되고 뺏기지 말아야 할 심부체온을 피부를 통해 밖으로 급격히 빼앗기게 됩니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 2015 기출 Q12 \"스스로 판단하고 결정하며 자신의 의사결정과 사고 감정에 책임지는 것을 의미하는 마리 야호다의 정신건강 평가기준은? (정답: 자율성)\" 이 문제를 13강(응급처치 2) 시험지로 편집할 때의 조치로 알맞은 것은?",
+      "o": [
+        "13강 워크북 핵심 개념이므로 최상단에 배치한다.",
+        "마리 야호다의 정신건강 이론은 앞 단원(9강 등)의 내용이며 13강 응급처치 소스에는 포함되지 않으므로 출제 범위에서 전면 제외(필터링)한다.",
+        "자율성 대신 '열사병'으로 단어만 바꾸어 억지로 출제한다.",
+        "정신건강 문제도 심리적 응급상황이므로 13강에 편입시킨다."
+      ],
+      "a": 1,
+      "h": "출제 원칙의 핵심은 제공된 범위에 없는 '과거의 유물'과 타 단원 내용을 철저히 검열하여 삭제하는 것입니다.",
+      "e": "기출 파일에는 전 단원 내용이 존재합니다. 마리 야호다 이론은 13강(환경응급질환, 코피, 안/구강질환) 소스 텍스트에 전혀 없으므로, 통합 출제 원칙의 '구 기출문제 정밀 필터링' 조항에 따라 가차 없이 삭제되어야 합니다."
+}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

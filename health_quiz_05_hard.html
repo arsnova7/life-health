@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [5강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제5강: 내분기계 & 근골격계 건강관리 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "골다공증의 발병 기전과 치료제 작용 원리에 관한 연결로 가장 과학적으로 타당한 것은? [★★★ 워크북 심화]",
+      "o": ["폐경 후 에스트로겐 감소는 조골세포를 파괴하므로, 콜키신을 투여하여 에스트로겐을 대체한다.", "칼슘과 비타민 D 부족 시 뼈의 미세구조가 약해지므로, 칼시토닌이나 알란드로네이트를 투여해 골소실(뼈 파괴)을 억제하고 골량을 유지시킨다.", "운동 부족으로 뼈가 녹아내리므로, 인슐린을 관절에 직접 주사하여 뼈 세포를 증식시킨다.", "저체중이 원인이므로 무조건 고지방 식이를 통해 체지방을 40% 이상 늘려 뼈를 보호한다."],
+      "a": 1,
+      "h": "골다공증 약물(칼시토닌, 비스포스포네이트 등)은 뼈를 갉아먹는 파골세포의 작용을 막아 뼈가 숭숭 뚫리는 것을 방지합니다.",
+      "e": "골다공증 치료는 파골세포(뼈 파괴 세포)의 활성을 억제하는 칼시토닌, 알란드로네이트와 같은 약물을 사용하고 뼈의 재료인 칼슘/비타민 D를 공급하는 것이 핵심입니다."
+    },
+    {
+      "level": "상",
+      "q": "퇴행성 관절염(골관절염)과 통풍의 임상 증상 및 병태생리의 차이점으로 명확히 구분된 것은? [교재 종합]",
+      "o": ["퇴행성 관절염은 요산 축적으로 발생하며, 통풍은 연골 마모로 발생한다.", "퇴행성 관절염은 마찰음과 체중 부하 부위(무릎 등)의 통증이 주특징이며, 통풍은 퓨린 대사 장애로 인한 엄지발가락 등의 급성 발적과 극심한 통증(요산 결정 침착)이 주특징이다.", "퇴행성 관절염은 남성에게 압도적으로 많고, 통풍은 노년층 여성에게만 발생한다.", "퇴행성 관절염 치료에는 콜키신이 쓰이고, 통풍 치료에는 관절 치환 수술만이 유일한 대안이다."],
+      "a": 1,
+      "h": "관절염은 '연골 마모(마찰음, 체중 하중)', 통풍은 '요산 축적(극심한 발작, 남성 호발)'이 키워드입니다.",
+      "e": "퇴행성 관절염은 기계적 마모(일차성/이차성) 질환이며, 통풍은 대사성 질환(요산 축적)이므로 병태생리와 호발 부위, 치료법이 완전히 다릅니다."
+    },
+    {
+      "level": "상",
+      "q": "다음 중 비만 관리를 위한 운동요법의 생리학적 효과와 처방 원칙으로 올바른 추론은? [★★★ 워크북 심화]",
+      "o": ["유산소 운동(걷기, 수영 등)은 심박수를 높이고 산소를 충분히 공급하여 잉여 체지방을 에너지원으로 연소시키는 데 가장 효과적이므로 주 3~5회 규칙적으로 실시한다.", "관절 연골 보호를 위해 비만 환자는 절대 걷거나 움직여서는 안 되며 굶는 것만이 유일한 대안이다.", "무산소 고강도 운동(무거운 역도 1회 들기)이 지방을 물로 분해하는 데 유산소 운동보다 10배 이상 빠르다.", "유산소 운동 시 심장비대가 가속화되므로 비만 합병증을 가진 환자는 운동을 피해야 한다."],
+      "a": 0,
+      "h": "지방을 태우려면 산소가 지속적으로 공급되는 중강도 이상의 긴 운동(유산소)이 필요합니다.",
+      "e": "비만 관리에는 잉여 열량 연소(지방 산화)를 위해 심폐 기능을 적절히 자극하는 유산소 운동(걷기, 조깅, 수영 등)을 주 3~5회, 30~60분간 꾸준히 하는 것이 표준 지침입니다."
+    },
+    {
+      "level": "상",
+      "q": "제1형 당뇨병과 제2형 당뇨병 환자의 간호 및 생활 관리 중재 시, 보건의료인이 두 질환의 차이를 정확히 반영하여 내린 처방은? [강의 종합]",
+      "o": ["제1형 환자: 췌장이 파괴되었으므로 체중만 30kg 감량하면 인슐린 주사 없이 완치됩니다.", "제2형 환자: 비만과 식습관이 주원인이므로, 운동과 식이요법으로 인슐린 저항성을 개선하여 혈당을 조절해 봅시다.", "제1형 환자: 고혈압 합병증이 올 수 있으니 콜키신을 매일 투여해야 합니다.", "제2형 환자: 뼈에서 칼슘이 빠져나가 당뇨가 생겼으니 비타민 D 일광욕만 하시면 됩니다."],
+      "a": 1,
+      "h": "1형은 인슐린 공장(췌장) 자체가 부서진 것이고, 2형은 몸에 살이 찌고 대사가 나빠져 인슐린이 잘 안 듣는(저항성) 상태입니다.",
+      "e": "제1형 당뇨병은 췌장 베타세포 파괴로 인슐린 자체가 분비되지 않아 외부 주입이 절대적이나, 제2형 당뇨병은 비만/생활습관 교정을 통해 인슐린의 효율(감수성)을 높이는 것이 핵심 관리법입니다."
+    },
+    {
+      "level": "상",
+      "q": "★ 통합 출제 원칙 적용 메타 검증 ★ 과거 기출문제(2015~2018)에 자주 등장했던 비만의 유형 분류인 '지방세포 증식형 비만(소아기)'과 '지방세포 비대형 비만(성인기)' 이론은 개편된 최신 5강 범위(교재/강의록/워크북)에 어떻게 반영되어 출제되어야 하는가?",
+      "o": ["여전히 비만 파트의 가장 핵심적인 병태생리이므로 [2018 기출] 표기를 달고 무조건 출제해야 한다.", "최신 제공된 5강 소스 텍스트에는 비만의 정의(잉여열량 저장), 합병증, 식사/운동요법만이 제시되어 있으므로, 과거 기출에 있더라도 증식형/비대형 분류는 제외(삭제)해야 한다.", "제1형 당뇨병의 원인으로 통합되어 설명되고 있으므로 당뇨병 문제의 보기로 활용해야 한다.", "퇴행성 관절염의 원인으로 명칭이 바뀌었으므로 관절염 파트에서 출제한다."],
+      "a": 1,
+      "h": "제공된 소스 [1]와 강의록 [2], 트랜스크립트 [3]에는 증식형/비대형 비만에 대한 언급이 전혀 없습니다.",
+      "e": "구 기출에 다수 출제되었으나 현재 개편된 교재 소스에 등장하지 않는 이론(비만의 증식형/비대형 세부 분류)은 '과거의 유물'로 간주하여 완전히 삭제하고 출제하지 않는 것이 원칙입니다."
+    },
+    {
+      "level": "상",
+      "q": "다음 중 남성 호발성 질환인 통풍(Gout)의 발병 위험을 높이는 생리학적 기전과 생활 환경적 악화 요인이 완벽하게 결합된 사례는? [2018 기출 응용/종합]",
+      "o": ["평소 우유와 멸치를 하루 5끼 섭취하여 칼슘이 뼈에 과다 침착된 20대 여성", "폐경 직후 에스트로겐이 급감하여 뼈에서 요산이 쏟아져 나온 50대 여성", "체질적으로 퓨린 대사 능력이 떨어지는데, 매일 저녁 삼겹살(고퓨린)과 맥주(요산 배설 억제)를 즐겨 마시는 40대 남성", "스트레스로 인해 세로토닌 대사 이상이 생겨 뇌혈관이 심하게 확장된 30대 남성"],
+      "a": 2,
+      "h": "맥주는 퓨린 함량이 매우 높고 알코올은 요산이 소변으로 나가는 것을 막아 몸 안에 요산을 가둡니다.",
+      "e": "통풍은 퓨린 대사 이상(요산 과다)이 원인이며, 고기/내장류(고퓨린) 섭취와 음주(특히 맥주)는 요산 생성 증가 및 배설 억제를 이중으로 악화시키는 치명적 요인입니다."
+    },
+    {
+      "level": "상",
+      "q": "퇴행성 관절염의 '일차성' 원인과 '이차성' 원인을 구분하여 임상 사례에 적용할 때, 병태생리학적 분류가 올바르게 된 것은? [★★★ 워크북 심화]",
+      "o": ["65세 과체중 여성이 평생 쪼그려 앉아 농사일을 한 후 무릎 연골이 마모된 경우 -> 이차성 퇴행성 관절염", "20대 남성이 십자인대 파열 및 반월상 연골판 손상(외상)을 입고 방치한 후 수년 뒤 해당 관절에 발생한 관절염 -> 일차성 퇴행성 관절염", "유전적 소인과 노화로 인해 특별한 사고 없이 70대 남성의 고관절 연골이 점진적으로 닳아 없어진 경우 -> 일차성 퇴행성 관절염", "요산 축적으로 인해 엄지발가락 관절이 파괴되어 발생한 염증 -> 일차성 퇴행성 관절염"],
+      "a": 2,
+      "h": "일차성은 '원인을 딱 하나 꼬집기 어려운 자연적 노화나 체중 부하' 등이고, 이차성은 '확실한 사고(외상)나 기형' 등 선행 사건이 명확한 경우입니다.",
+      "e": "나이, 유전, 비만 등 기저 질환이나 외상 없이 자연적으로 발생하는 것은 일차성, 심한 외상/골절/질병/기형 등 뚜렷한 선행 요인에 의해 발생하는 것은 이차성 퇴행성 관절염입니다. 요산 축적은 통풍입니다."
+    },
+    {
+      "level": "상",
+      "q": "골다공증 예방과 관련된 생리학적 기전 중, 뼈 건강을 위한 '일광욕(햇빛 쬐기)'과 '칼슘' 간의 상관관계를 가장 정확히 설명한 것은? [강의 심화]",
+      "o": ["햇빛의 자외선이 뼈 속에 침투하여 칼슘을 직접 생성해 내기 때문이다.", "피부가 햇빛을 받아 합성하는 비타민 D가 장에서 칼슘의 흡수를 결정적으로 촉진하여 골밀도를 높이기 때문이다.", "일광욕을 하면 땀으로 칼슘이 배출되어 골조직이 일시적으로 수축하며 튼튼해지기 때문이다.", "자외선은 뼈를 파괴하는 파골세포를 즉각적으로 태워 죽이므로 칼슘이 필요 없어지기 때문이다."],
+      "a": 1,
+      "h": "칼슘을 아무리 많이 먹어도 비타민 D가 없으면 장에서 우리 몸으로 흡수되지 않고 대변으로 다 빠져나갑니다.",
+      "e": "칼슘의 체내 흡수율을 높이려면 반드시 비타민 D가 필요하며, 비타민 D는 음식 섭취 외에도 자외선을 통해 피부에서 효율적으로 합성되므로 노인들의 일광욕이 강조되는 것입니다."
+    },
+    {
+      "level": "상",
+      "q": "내분비계 질환인 당뇨병(Diabetes)이 신경계 및 심혈관계 등 전신 합병증을 유발하는 근본적인 병태생리적 이유는 무엇인가? [강의 응용]",
+      "o": ["당분이 뇌로 직접 올라가 뇌세포를 과흥분시켜 뇌출혈만을 유발하기 때문이다.", "고혈당 상태가 장기간 지속되면 끈적해진 혈액이 모세혈관과 신경 조직을 손상시켜, 신장/망막/말초신경 및 대혈관(심장/뇌혈관)을 광범위하게 파괴하기 때문이다.", "췌장에서 분비된 인슐린이 뼈를 녹여 관절염을 동시에 발생시키기 때문이다.", "혈당이 정상화되면 역으로 백혈구 기능이 정지되어 폐렴구균에 감염되기 때문이다."],
+      "a": 1,
+      "h": "피 속에 설탕이 많이 녹아 끈적해지면, 우리 몸 구석구석의 미세한 핏줄과 신경 가닥들이 서서히 막히고 망가집니다.",
+      "e": "조절되지 않은 만성 고혈당은 혈관 벽을 훼손하여 미세혈관 합병증(망막, 신장, 말초신경병증)과 대혈관 합병증(동맥경화, 심근경색, 뇌졸중)을 전신에 걸쳐 유발합니다."
+    },
+    {
+      "level": "상",
+      "q": "통풍의 약물 요법 중 하나인 '콜키신(Colchicine)'의 투여 목적 및 임상적 작용에 대한 설명으로 가장 적합한 것은? [2015 기출 변형/★★★ 워크북 심화]",
+      "o": ["관절 연골을 새롭게 재생시켜 퇴행성 관절염을 원천적으로 막기 위함이다.", "급성 통풍 발작 시 염증 반응을 억제하여 극심한 통증을 완화하고 체내 요산 배설을 돕기 위함이다.", "혈중 에스트로겐 농도를 강제로 높여 골다공증 뼈 손실을 막기 위함이다.", "췌장의 베타세포를 자극하여 인슐린 분비를 20배 이상 늘리기 위함이다."],
+      "a": 1,
+      "h": "통풍 발작 시 붓고 아픈 염증을 가라앉히는 특효약입니다.",
+      "e": "콜키신은 요산 결정에 대한 백혈구의 탐식 작용과 염증 반응을 억제하여 급성 통풍 발작의 통증을 획기적으로 줄이고 요산 관리에 도움을 줍니다."
+    },
+    {
+      "level": "상",
+      "q": "호르몬 분비 기관인 내분비선(Endocrine glands)의 생리적 특성을 소화 효소 등을 분비하는 외분비선(Exocrine glands, 예: 땀샘, 침샘)과 비교하여 추론할 때 가장 올바른 것은? [강의 심화]",
+      "o": ["내분비선은 별도의 도관(파이프)을 통해 신체 표면이나 소화관으로 직접 분비물을 내보낸다.", "내분비선은 호르몬을 세포 사이 간질액을 거쳐 '혈류(혈액)' 속으로 직접 분비하여 전신으로 순환시킨다.", "외분비선은 표적 기관 세포의 수용체와 화학적으로만 결합하여 인슐린을 분비한다.", "내분비선과 외분비선 모두 오직 뇌하수체의 통제만을 받으며 소변을 만들어낸다."],
+      "a": 1,
+      "h": "내분비(Endocrine)의 '내(Endo-)'는 혈액 속으로 직접 분비한다는 의미이고, 외분비(Exo-)는 분비관(침샘관 등)을 통해 외부로 분비한다는 뜻입니다.",
+      "e": "내분비선은 전용 분비관(도관)이 없이 모세혈관망(혈류)으로 호르몬을 직접 분비하여 먼 거리에 있는 표적 기관까지 신호를 전달하는 시스템입니다."
+    },
+    {
+      "level": "상",
+      "q": "퇴행성 관절염 환자에게 '근육 강화 운동'을 강력히 권장하는 생체역학적 근거로 가장 타당한 것은? [★★★ 워크북 심화]",
+      "o": ["근육이 발달하면 연골이 뼈로 변하여 통증을 느끼지 못하게 되기 때문이다.", "강화된 관절 주변 골격근이 충격 흡수 장치(쇼크 앱소버) 역할을 하여, 손상된 연골 대신 뼈와 관절에 가해지는 하중(스트레스)을 효과적으로 분산시켜 주기 때문이다.", "운동 시 생성되는 젖산이 닳아버린 연골을 원래 상태로 100% 재생시키기 때문이다.", "통증으로 인해 움직이지 않으면 근육에서 콜키신이 저절로 분비되기 때문이다."],
+      "a": 1,
+      "h": "건물이 부실해질 때 외벽에 철골 기둥(근육)을 덧대어 건물이 무너지지 않게 지탱하는 원리와 같습니다.",
+      "e": "퇴행성 관절염 환자는 연골이 닳아 관절 자체가 충격을 흡수하기 어려우므로, 대퇴사두근 등 주변 근육을 강화하여 관절로 가는 부하를 분산시키고 관절의 안정성을 높여 통증을 줄여야 합니다."
+    },
+    {
+      "level": "상",
+      "q": "비만이 인체 대사에 미치는 악영향을 고려할 때, 제2형 당뇨병 관리에서 '체중 감소'가 혈당 조절에 미치는 생리학적 이점을 올바르게 설명한 것은? [강의/교재 종합]",
+      "o": ["체중이 감소하면 인슐린 분비를 완전히 멈추게 하여 췌장을 휴식시킴으로써 혈당을 자연적으로 0으로 만든다.", "체지방 감소는 인슐린에 대한 세포의 반응성(인슐린 감수성)을 높여, 췌장에서 분비되는 인슐린이 제 기능을 다하도록 도와줌으로써 혈당 수치를 안정화한다.", "살이 빠지면 혈액 속의 적혈구가 포도당을 대신 소화시켜 에너지로 전환하므로 혈당이 낮아진다.", "체중 감소는 뇌하수체를 파괴하여 당분 섭취 욕구를 완전히 차단하기 때문이다."],
+      "a": 1,
+      "h": "몸에 살(지방)이 찌면 인슐린이 아무리 나와도 세포의 문이 안 열립니다(인슐린 저항성). 살을 빼면 이 문이 다시 잘 열립니다(감수성 회복).",
+      "e": "제2형 당뇨병은 비만에 의한 '인슐린 저항성' 증가가 핵심 원인이므로, 체중을 감량하면 인슐린 저항성이 개선(감수성 증가)되어 혈당 조절이 매우 원활해집니다."
+    },
+    {
+      "level": "상",
+      "q": "골다공증 예방 측면에서 '어린이와 청소년 시기의 영양과 운동'이 노년기 뼈 건강에 결정적 영향을 미치는 생애주기적 생리 원리는? [★★★ 워크북 응용]",
+      "o": ["어린 시기에 칼슘을 섭취하면 평생 뼈가 자라나 80세에도 키가 크기 때문이다.", "청소년기에 형성된 '최대 골량(Peak bone mass)'이 뼈 은행의 잔고 역할을 하므로, 젊을 때 뼈를 가장 크고 단단하게(골량 최대화) 만들어 두어야 노년기 골소실을 견딜 수 있기 때문이다.", "청소년기에 걷기 운동을 하면 에스트로겐 분비가 영구적으로 멈추어 뼈 손실을 원천 차단하기 때문이다.", "어릴 때 먹은 칼슘만이 유일하게 뇌 세포를 보호하여 노인성 치매를 막아주기 때문이다."],
+      "a": 1,
+      "h": "뼈 건강은 '은행 예금'과 같아서, 20대 전후에 저축(최대 골량)을 많이 해두어야 나이 들어 뼈가 빠져나가도 파산(골다공증)하지 않습니다.",
+      "e": "인체의 뼈 질량은 20~30대에 최대 골량에 도달한 후 점차 감소하므로, 성장기에 고칼슘 식이와 체중 부하 운동으로 최대 골량을 가능한 높게 형성해 두는 것이 노년기 골다공증 예방의 핵심입니다."
+    },
+    {
+      "level": "상",
+      "q": "다음 중 과거 기출(2015~2019)에서 출제된 문제의 개념이 개편된 최신 5강 교재에 부합하여, 여전히 가장 핵심적인 문제로 유효한 것은? [기출 정밀 필터링 및 교재 매칭]",
+      "o": ["심혈관계 질환 예방을 위한 심장 판막의 혈액 역류 방지 메커니즘을 묻는 문제", "우울증 약물 치료 시 세로토닌 재흡수 억제제의 작용 기전을 묻는 문제", "퇴행성 관절염의 증상(마찰음, 국소통증)과 예방관리(체중 유지, 근육강화)를 묻는 문제", "소화성 궤양의 1차적 원인이 헬리코박터 파일로리균임을 묻는 문제"],
+      "a": 2,
+      "h": "최신 5강은 '내분비계(당뇨, 비만)'와 '근골격계(골다공증, 관절염, 통풍)'만을 다룹니다.",
+      "e": "심혈관계, 신경계(우울증), 소화기계(위궤양)는 5강(내분비계, 근골격계)의 출제 범위가 아닙니다. 퇴행성 관절염 문제만이 5강 범위와 완벽히 교집합을 이룹니다."
+}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

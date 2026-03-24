@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10강 - 생활과 건강 플래시카드</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* 1. 컨테이너 너비를 850px로 넓혀서 글자가 옆으로 퍼지게 했습니다 */
+        .container { max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; }
+        
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        
+        /* 2. 카드 높이를 400px로 키우고, 단어 단위 정렬(keep-all)을 추가했습니다 */
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            margin: 20px 0; 
+            min-height: 400px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 1.25rem; 
+            font-weight: bold; 
+            word-break: keep-all; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+            position: relative; 
+        }
+        
+        .card.flipped { transform: rotateY(180deg); }
+        .side { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: 20px; overflow-y: auto; }
+        .front { background: white; color: #333; }
+        .back { transform: rotateY(180deg); background: #f8f9fa; color: #5c6ac4; }
+        .controls { display: flex; justify-content: space-between; gap: 10px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; background: white; color: #764ba2; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>제10강 플래시카드</h1>
+            <p><span id="current">1</span> / <span id="total">50</span></p>
+        </div>
+        <div class="card" id="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="side front" id="question">질문 로딩 중...</div>
+            <div class="side back" id="answer">정답 로딩 중...</div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="prevCard()">이전</button>
+            <button class="btn" onclick="nextCard()">다음</button>
+            <button class="btn" onclick="location.href='index.html'">목록으로</button>
+        </div>
+    </div>
+
+    <script>
+        // 주석(//)을 제거하여 데이터를 정상적으로 읽게 수정했습니다.
+        const cards = [
+            {"q": "★★★ 스트레스가 지각되면 일어나는 반응을 여러 변화로 이루어진 '일반적 증후군(GAS)'으로 명명한 학자는? [★★★ 워크북/교재]", "a": "셀리(Selye)"},
+    {"q": "★★★ 셀리(Selye)가 제시한 일반적 증후군(GAS)의 3단계는 경고반응기, 저항기, 그리고 무엇인가? [★★★ 워크북 연습문제]", "a": "소진기"},
+    {"q": "★★★ 스트레스 사건이 개인의 안녕에 위협이나 상실인지, 혹은 도전인지를 평가하는 인지적 과정은? [강의/교재]", "a": "1차적 평가"},
+    {"q": "★★★ 스트레스를 극복하기 위해 이용 가능한 대처전략(극복방안)에 대해 평가하는 인지적 과정은? [강의/교재]", "a": "2차적 평가"},
+    {"q": "★★★ 환경이나 자신의 반응에서 오는 새로운 정보에 기초하여 기존의 스트레스 평가를 변경하는 과정은? [교재]", "a": "재평가"},
+    {"q": "★★★ 스트레스를 야기시킨 문제를 직접 처리하거나 상황을 바꾸려는 대처 방식은? [교재]", "a": "문제중심적 대처"},
+    {"q": "★★★ 친구와의 대화, 소리 지르기나 울분 터뜨리기 등 문제에 대한 감정적 반응을 조절하려는 대처 방식은? [2017년 기출/교재]", "a": "정서중심적 대처"},
+    {"q": "★★★ 객관적인 사실의 변화 없이 상황의 의미를 변화시켜 스트레스를 조절하는 전략은? [2016년 기출/교재]", "a": "인지적 대처"},
+    {"q": "★★★ 스트레스 사건의 종류, 기간, 증상 등을 구체적으로 기록하여 통찰력을 기르는 자기관리 도구는? [강의/교재]", "a": "스트레스 인식일지 (Stress log)"},
+    {"q": "★★★ 크랜웰-워드(Cranwell-Ward)가 개발한 척도로, 개인의 스트레스 저항력 및 요인을 파악하는 검사는? [강의/교재]", "a": "스트레스 취약성 검사"},
+    {"q": "★★★ 스트레스 취약성 검사에서 '양호'한 상태를 나타내는 점수 기준은 몇 점 이상인가? [교재]", "a": "12점 이상"},
+    {"q": "★★★ 스트레스 취약성 검사에서 점수가 몇 점 이하일 때 스트레스 관리가 '불량'한 것으로 평가하는가? [교재]", "a": "8점 이하"},
+    {"q": "★★★ 일상의 규칙을 만들어 적응 에너지를 보존하고 항상성을 유지시키는 스트레스 관리 전략은? [★★★ 워크북/교재]", "a": "환경관리 전략"},
+    {"q": "★★★ 스트레스 유발 요인에 대처하기 위해 과제를 적당한 크기의 소과제로 나누는 것은 환경관리 전략에 속한다. (O/X) [강의/교재]", "a": "O"},
+    {"q": "★★★ 스트레스로 인해 체내 분비가 증가하여 지방 생성과 복부비만 위험을 높이는 일명 '스트레스 호르몬'은? [2018년 기출/교재]", "a": "코르티솔(Cortisol)"},
+    {"q": "★★★ 스트레스 상황에서는 비타민이나 무기질 소모가 증가하므로 채소나 과일을 충분히 섭취해야 한다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 스트레스 관리 시 커피, 홍차, 콜라 등 카페인이 함유된 식품은 스트레스 반응을 유발하므로 섭취를 피해야 한다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 원하지 않는 부정적 생각이 떠오를 때 속으로나 겉으로 \"그만!\"이라고 외쳐 사고를 차단하는 인지적 전략은? [2019년 기출/강의]", "a": "생각의 중단 (사고의 중단)"},
+    {"q": "★★★ 불안과 분노를 야기하는 '절대론적 생각'이나 '완벽주의'를 합리적 생각으로 바꾸는 인지적 전략은? [강의/교재]", "a": "비합리적인 신념 논박"},
+    {"q": "★★★ 스트레스와 불안이 근육을 긴장시킨다는 전제하에, 근육을 이완시켜 스트레스를 완화하는 생리적 기법은? [★★★ 워크북/교재]", "a": "점진적 근육이완"},
+    {"q": "★★★ 기기를 사용하여 자신의 정신생리적 불수의적 반응을 눈으로 확인하고 자기조절 능력을 기르는 스트레스 이완 기법은? [강의/교재]", "a": "바이오피드백"},
+    {"q": "★★★ 스트레스 예방을 위해 자신의 스트레스 강도, 유발 사건, 그리고 신체적/정신적 (  )을 파악해야 한다. [2019년 기출/강의]", "a": "증상 (또는 반응)"},
+    {"q": "★★★ 스트레스를 관리할 때 지나간 젊음에 대한 향수나 물질에 대한 과도한 집착은 버리는 것이 좋다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 스트레스 관리를 위해서는 늘 새로운 아이디어를 창조하며 주위 환경과 만나는 사람을 수시로 바꾸는 것이 가장 바람직하다. (O/X) [★★★ 워크북 연습문제]", "a": "X (피할 수 있는 불필요한 생활 변화는 피하는 것이 좋음)"},
+    {"q": "★★★ 목표 달성이 좌절될 때를 대비해 대안적 목표를 미리 정해두는 것은 바람직한 환경관리 전략이다. (O/X) [★★★ 워크북/강의]", "a": "O"},
+    {"q": "★★★ 과도한 책임감이나 지나친 기대 등 '과잉부담'을 일으키는 요인을 사정하여 적절히 위임하는 것은 효과적인 스트레스 관리법이다. (O/X) [강의/교재]", "a": "O"},
+    {"q": "★★★ 인지적 대처는 스트레스를 유발하는 사건의 사실 자체를 완전히 뒤바꾸어 버리는 물리적 전략이다. (O/X) [2016년 기출/교재]", "a": "X (객관적 사실의 변화 없이 상황의 '의미'만을 변화시키는 전략임)"},
+    {"q": "★★★ 스트레스로 인한 위급 상황(투쟁-도피 반응) 시, 우리 몸의 동공은 수축하고 골격근은 이완된다. (O/X) [2019년 기출/강의]", "a": "X (동공은 확대되고 골격근은 수축하여 긴장 상태가 됨)"},
+    {"q": "★★★ 스트레스 위급 상황 시 교감신경의 흥분으로 혈당이 상승하고 혈압과 맥박이 증가한다. (O/X) [2019년 기출/교재]", "a": "O"},
+    {"q": "★★★ 점진적 근육이완은 스트레스 사건을 보다 현실적으로 평가하는 '인지적 재구성' 기법에 속한다. (O/X) [★★★ 워크북 연습문제]", "a": "X (인지적 기법이 아니라 신체/생리적 이완 기법임)"},
+    {"q": "★★★ 명상(Meditation)은 교감신경의 활성화를 줄여 산소 소모량을 저하시키고, 혈류 내 유산(lactic acid) 농도를 낮추는 효과가 있다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 스트레스 취약성 검사의 8개 하위 척도 중 '건강식' 항목은 소금을 많이 넣지 않고 생수/미네랄 워터를 규칙적으로 마시는지 평가한다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 스트레스 관리를 위한 운동은 일주일에 3회 이상, 약간 땀이 날 정도로 실천하는 것이 좋다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 스트레스를 관리하기 위해서는 사회적 지지체계를 최대한 배제하고 오직 혼자만의 힘으로 이겨내야 한다. (O/X) [교재]", "a": "X (친구나 가족, 성직자 등 사람들과 긍정적 관계를 맺고 지지를 얻어야 함)"},
+    {"q": "★★★ 스트레스를 유발하는 상황을 미리 예방하거나 환경을 조정하는 것은 효과적인 스트레스 관리의 첫걸음이다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 스트레스 취약성 검사 항목 중 '일주일에 적어도 세 번 땀이 날 정도로 운동한다'는 문항은 어떤 하위 척도를 평가하는가? [교재]", "a": "운동 프로그램"},
+    {"q": "★★★ 자신의 스트레스를 파악하여 적정 수준의 스트레스를 유지하고 관리하는 것은 바람직한 일이다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 스트레스 상황에서 때로는 체념할 줄 알고 거절할 줄 아는 것도 중요한 생활 수칙이다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 캐논(Cannon)은 사람이 긴장하고 스트레스를 받을 때 '이것'의 운동이 멈추는 것을 관찰하여 스트레스 반응을 설명하였다. '이것'은? [강의]", "a": "장 (장운동)"},
+    {"q": "★★★ 라자루스(Lazarus)와 포크만(Folkman)은 스트레스를 인간과 환경 간의 '상호작용' 과정으로 보았다. (O/X) [강의]", "a": "O"},
+    {"q": "★★★ 스트레스 상황에 처했을 때, 요구되는 부담이 자신의 자원이나 역량을 초과한다고 여겨질 때 스트레스를 경험한다. (O/X) [강의]", "a": "O"},
+    {"q": "★★★ 과제를 해결하기 위해 우선순위가 낮은 과제는 과감히 버리고 현실적인 시간계획을 세워 실천하는 것은 무슨 전략인가? [교재]", "a": "환경관리 전략 (시간관리)"},
+    {"q": "★★★ 일상 규칙을 세우는 것은 적응 에너지를 보존하고 항상성을 유지시키기 때문에 스트레스를 감소시킨다. (O/X) [★★★ 워크북 연습문제]", "a": "O"},
+    {"q": "★★★ 스트레스를 피할 수 없는 상황이라면 긍정적으로 생각하고 감사와 웃음으로 긴장을 해소한다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 일상생활이 불가능할 정도의 심각한 스트레스라면 개인적 노력을 중단하고 자연치유를 기다려야 한다. (O/X) [교재]", "a": "X (전문가와의 상담과 치료를 적극 활용해야 함)"},
+    {"q": "★★★ 2019년 기출문제에 등장한 투쟁-도피 반응(Fight or Flight response) 시 분비되는 대표적인 부신수질 호르몬은? [2019년 기출/교재]", "a": "에피네프린 (또는 아드레날린)"},
+    {"q": "★★★ 스트레스 취약성 검사의 8개 하위척도 중 가족 모임, 친구와의 관계 유지 등을 평가하는 항목은? [교재]", "a": "정서적 안녕감"},
+    {"q": "★★★ 대처 전략 중 '인지의 변화(자기관리 전략 I)'에 해당하는 3가지 기법은 자존감 증진, 생각의 중단, 그리고 무엇인가? [강의/교재]", "a": "비합리적인 신념 논박"},
+    {"q": "★★★ 비합리적 신념의 대표적 형태인 '흑백논리'나 '항상 남을 탓하기'는 스트레스를 가중시킨다. (O/X) [강의/교재]", "a": "O"},
+    {"q": "★★★ 스트레스 관리를 위해 신체 이완과 관련된 생리적 자기관리 전략에는 심호흡, 명상, 점진적 근육이완이 포함된다. (O/X) [강의/교재]", "a": "O"}
+        ];
+
+        let cur = 0;
+        const qEl = document.getElementById('question');
+        const aEl = document.getElementById('answer');
+        const curEl = document.getElementById('current');
+        const totEl = document.getElementById('total');
+
+        function updateCard() {
+            qEl.textContent = cards[cur].q;
+            aEl.textContent = cards[cur].a;
+            curEl.textContent = cur + 1;
+            totEl.textContent = cards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function nextCard() { cur = (cur + 1) % cards.length; updateCard(); }
+        function prevCard() { cur = (cur - 1 + cards.length) % cards.length; updateCard(); }
+
+        // 초기 실행
+        updateCard();
+    </script>
+</body>
+</html>

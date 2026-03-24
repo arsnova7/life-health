@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [8강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제8강: 건강한 생활습관 2 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "하", "q": "뇌심혈관질환 및 당뇨병의 위험을 높이는 비만, 고혈압, 고지질혈증, 심혈관계 죽상경화증 등의 질환이 한 개인에게서 한꺼번에 나타나는 상태를 무엇이라 하는가? [★★★ 워크북/교재]",
+      "o": ["만성피로증후군", "대사증후군", "면역결핍증후군", "호흡기증후군"],
+      "a": 1,
+      "h": "생활습관병의 대표적인 종합 세트입니다.",
+      "e": "비만, 혈압 상승, 지질 이상 등이 겹친 상태를 대사증후군이라 하며, 생활습관 개선이 최우선 치료법입니다."
+    },
+    {
+      "level": "하",
+      "q": "세계보건기구(WHO)의 2013년 비감염성질환 보고서에 따르면, 심장질환, 뇌졸중, 당뇨병으로 인한 조기 사망의 약 몇 %가 건강한 생활습관(금연, 운동, 건강한 식이)으로 예방 가능하다고 밝혀졌는가? [강의/교재]",
+      "o": ["20%", "40%", "60%", "80%"],
+      "a": 3,
+      "h": "대부분의 조기 사망은 예방이 가능하다는 충격적인 수치입니다.",
+      "e": "심장질환, 뇌졸중, 당뇨병으로 인한 조기사망의 무려 80%, 암의 40%가 금연, 운동, 건강한 식이로 예방 가능합니다."
+    },
+    {
+      "level": "하",
+      "q": "보건복지부가 제안한 대사증후군 관리를 위한 식생활 가이드라인에서 하루 전체 열량 중 '지방'의 섭취량은 몇 % 이하로 제한할 것을 권고하는가? [교재]",
+      "o": ["10% 이하", "20% 이하", "30% 이하", "50% 이하"],
+      "a": 2,
+      "h": "지방은 칼로리가 높아 전체 열량의 1/3을 넘지 않도록 해야 합니다.",
+      "e": "지방 섭취량은 전체 열량의 30% 이하로 제한하고, 그중 포화지방산은 10% 이하로 관리해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "세계보건기구(WHO)가 권장하는 성인의 하루 소금 섭취 목표량은 얼마 이하인가? [2019년 기출 응용/교재]",
+      "o": ["1g 이하", "5g 이하", "10g 이하", "15g 이하"],
+      "a": 1,
+      "h": "나트륨으로 환산하면 2,000mg에 해당하는 양입니다.",
+      "e": "WHO는 고혈압 예방을 위해 하루 소금 5g(나트륨 2,000mg) 이하 섭취를 권장하며, 우리나라 보건복지부도 소금 6g 이하를 권장하고 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "과체중이거나 복부비만인 환자가 체중을 감량하고자 할 때, 무리한 다이어트 대신 평소 칼로리 섭취량에서 하루 대략 어느 정도를 줄이는 것이 권장되는가? [교재]",
+      "o": ["50~100kcal", "250~500kcal", "1,000~1,500kcal", "2,000kcal 이상"],
+      "a": 1,
+      "h": "밥 한 공기 분량 정도를 덜 먹는 것이 건강한 감량법입니다.",
+      "e": "평소 섭취량보다 250~500kcal 정도를 줄여 서서히 체중을 감량하는 것이 장기적인 대사증후군 개선에 유리합니다."
+    },
+    {
+      "level": "하",
+      "q": "당분이 체내에 흡수되는 속도를 나타내는 수치로, 쌀, 익힌 감자, 흰 빵 등에서 높게 나타나 인슐린 저항성을 악화시키는 원인이 되는 이것은? [2016년 기출/★★★ 워크북]",
+      "o": ["체질량지수(BMI)", "혈당지수(당지수)", "기초대사량", "콜레스테롤지수"],
+      "a": 1,
+      "h": "GI (Glycemic Index)라고도 불립니다.",
+      "e": "혈당지수(당지수)가 높은 음식은 혈당을 빨리 증가시켜 인슐린 분비와 저항성을 높이므로 섭취를 자제해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "대사증후군 개선에 가장 효과적인 운동의 형태로서, 걷기, 조깅, 자전거 타기, 수영 등을 포함하는 운동은 무엇인가? [★★★ 워크북/교재]",
+      "o": ["무산소 운동", "유산소 운동", "등척성 운동", "단거리 전력 질주"],
+      "a": 1,
+      "h": "산소를 지속적으로 소모하여 지방을 태우는 운동입니다.",
+      "e": "대사증후군과 복부비만 관리에는 걷기, 수영 등의 유산소 운동이 가장 효과적이며 근력 운동을 병행하는 것이 좋습니다."
+    },
+    {
+      "level": "하",
+      "q": "일반인의 경우 건강을 유지하기 위해 하루 30~60분씩 일주일에 몇 회 정도 유산소 운동을 하는 것이 바람직한가? [강의/교재]",
+      "o": ["주 1회", "주 3~5회", "주 7회(매일)", "격주 1회"],
+      "a": 1,
+      "h": "일반적으로 격일 이상 꾸준히 해주는 빈도입니다.",
+      "e": "일반인은 최대 운동능력의 50~80% 강도로 주 3~5회 운동하는 것이 권장됩니다."
+    },
+    {
+      "level": "하",
+      "q": "체중이 많이 나가는 비만 환자의 경우, 운동 강도를 낮추는 대신 1회 운동 시간을 어느 정도로 유지하는 것이 권장되는가? [강의/교재]",
+      "o": ["10분 미만", "20~30분", "60분 이상", "3시간 이상"],
+      "a": 2,
+      "h": "강도가 낮으므로 지방을 태우기 위해 시간을 길게 잡아야 합니다.",
+      "e": "비만인 사람은 관절 손상을 막기 위해 강도를 50~60%로 낮추고, 대신 운동 시간을 60분 이상으로 늘리며 주 6~7회 시행하는 것이 바람직합니다."
+    },
+    {
+      "level": "하",
+      "q": "우리 체내 근육 조직 구성의 기본 성분이며, 기초대사량 유지 및 면역력 유지에 필수적이어서 매 끼니 육류나 콩류로 섭취해야 하는 영양소는? [교재]",
+      "o": ["단백질", "지방", "탄수화물", "나트륨"],
+      "a": 0,
+      "h": "인슐린 민감성에 중요한 역할을 하는 '근육'의 밥입니다.",
+      "e": "단백질은 근육량을 유지하여 인슐린 저항성 증가를 막아주는 핵심 영양소입니다."
+    },
+    {
+      "level": "하",
+      "q": "토마토에 풍부하게 함유되어 있으며 혈압 강하(낮춤) 작용을 하여 고혈압 예방에 도움을 주는 무기질(미네랄) 성분은? [교재]",
+      "o": ["철분", "나트륨", "칼륨", "수은"],
+      "a": 2,
+      "h": "나트륨 배출을 돕는 이온입니다.",
+      "e": "토마토에 풍부한 칼륨과 마그네슘은 혈압을 낮추어 고혈압 예방에 도움을 줍니다."
+    },
+    {
+      "level": "하",
+      "q": "시금치에 많이 들어 있으며, 혈관 청소부 역할을 하는 좋은 HDL 콜레스테롤은 증가시키고 나쁜 LDL은 감소시키는 영양소는? [교재]",
+      "o": ["비타민 A, D", "비타민 C, E", "단백질", "탄수화물"],
+      "a": 1,
+      "h": "강력한 항산화 비타민 두 가지입니다.",
+      "e": "채소류, 특히 시금치에 많은 비타민 C와 E는 지질 농도 개선에 큰 도움을 줍니다."
+    },
+    {
+      "level": "하",
+      "q": "흡연 시 체내에 흡수되어 혈압과 맥박 상승을 초래하고 심장에 직접적인 부담을 주는 담배의 성분은? [교재]",
+      "o": ["타르", "니코틴", "암모니아", "벤젠"],
+      "a": 1,
+      "h": "중독을 일으키기도 하는 교감신경 자극 물질입니다.",
+      "e": "니코틴은 흡수가 빨라 혈압과 맥박을 급상승시키고 심장에 부담을 줍니다."
+    },
+    {
+      "level": "하",
+      "q": "흡연 시 발생하는 기체 물질로, 헤모글로빈과의 결합력이 산소보다 400배나 높아 체내 심각한 저산소증과 혈관 손상을 초래하는 것은? [교재]",
+      "o": ["이산화탄소", "일산화탄소", "오존", "질소"],
+      "a": 1,
+      "h": "연탄가스 중독을 일으키는 독성 가스와 같습니다.",
+      "e": "일산화탄소(CO)는 산소 결핍을 초래하여 혈관 내벽 손상과 동맥경화를 악화시킵니다."
+    },
+    {
+      "level": "하",
+      "q": "대사증후군 예방 및 치료를 위한 생활습관 개선의 단기/장기 목표를 설정할 때 권장되는 기간은? [교재]",
+      "o": ["1주일", "1개월", "6개월 내지 1년", "10년 이상"],
+      "a": 2,
+      "h": "단기간에 무리하게 빼지 말고 서서히 적응해야 요요현상이 없습니다.",
+      "e": "체중 관리와 식습관 변화는 6개월~1년의 장기 목표를 설정하여 실천하는 것이 가장 효과적입니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

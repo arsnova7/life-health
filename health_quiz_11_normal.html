@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [11강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제11강: 우울증의 이해와 관리 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "중", "q": "우울장애의 하위 진단명과 그 특징을 연결한 것으로 가장 올바르지 않은 것은? [교재/강의]",
+      "o": [
+        "주요우울장애 - 2주 이상 거의 매일 우울한 기분과 흥미 상실이 지속되어 기능이 심각하게 저하됨",
+        "지속성 우울장애 - 우울 증상이 2년 이상 만성적으로 지속되며, 그 기간 중 증상이 없는 기간이 2개월을 넘지 않음",
+        "파괴적 기분조절부전장애 - 주로 성인기 후반에 발병하며 고도의 기억력 상실과 환각을 동반함",
+        "월경전불쾌감장애 - 월경 시작 전 반복적으로 불안정한 기분, 과민함이 나타났다가 월경 직후 사라짐"
+      ],
+      "a": 2,
+      "h": "파괴적인 분노 폭발은 주로 어린 나이에 관찰됩니다.",
+      "e": "파괴적 기분조절부전장애(Disruptive mood dysregulation disorder)는 만성적이고 고도의 지속적인 과민성, 잦은 분노 발작을 특징으로 하며 '아동이나 청소년'에게 흔히 발생합니다."
+    },
+    {
+      "level": "중",
+      "q": "우울증 약물치료의 일반적인 호전 경과(시간적 순서)를 가장 바르게 나열한 것은? [교재/강의]",
+      "o": [
+        "기분 증상 호전 -> 활력 호전 -> 식욕 및 수면 회복",
+        "식욕 및 수면 회복 -> 활력 호전 -> 기분 증상 등 주요 증상의 호전",
+        "활력 호전 -> 우울 망상 소실 -> 식욕 증가",
+        "기분 증상 호전 -> 체중 급감 -> 수면 시간 단축"
+      ],
+      "a": 1,
+      "h": "가장 기본적인 생리적 욕구가 먼저 돌아오고, 그 다음 몸이 움직일 힘이 생기며, 마지막으로 마음(기분)이 편안해집니다.",
+      "e": "교재의 [그림 6-1]에 따르면, 약물치료 시작 후 1~2주에 식욕/수면이 먼저 회복되고, 2~3주에 활력이 호전되며, 3~4주가 지나야 비로소 주관적인 기분 증상이 호전됩니다."
+    },
+    {
+      "level": "중",
+      "q": "우울증의 급성기 치료에서 약물 복용 시 간호사가 유의해야 할 사항으로 가장 적절한 것은? [교재/강의]",
+      "o": [
+        "약 복용 2~3일 내에 즉각적인 기분 상승 효과가 나타난다고 환자에게 확언한다.",
+        "입마름, 변비 등 부작용이 나타나면 치명적이므로 즉각 투약을 중단하도록 지시한다.",
+        "환자마다 부작용 증상과 정도가 다르므로 면밀히 관찰하고, 어려움 호소 시 전문가와 상담하여 대처법을 모색한다.",
+        "항우울제는 식욕을 억제하므로 다이어트 목적으로 복용량을 늘리도록 권장한다."
+      ],
+      "a": 2,
+      "h": "약의 부작용은 임의로 끊지 말고 전문가와 상의하여 용량을 조절해야 합니다.",
+      "e": "항우울제는 구갈, 변비, 졸음 등 다양한 부작용이 있을 수 있으나 치료를 위해 필수적이므로, 불편감을 지지하고 완화법을 적용하며 임의 중단 없이 전문가와 상의하도록 안내해야 합니다."
+    },
+    {
+      "level": "중",
+      "q": "우울증의 발병을 설명하는 인지적 기전(Cognitive theory)에 대한 내용으로 가장 거리가 먼 것은? [교재/강의]",
+      "o": [
+        "자신을 부정적이고 무가치한 존재로 평가한다.",
+        "세상을 자신에게 가혹하고 요구만 하는 적대적 대상으로 인식한다.",
+        "미래에 대해서 비관적이고 희망이 없다고 예측한다.",
+        "영유아기 구강기의 욕구 불만이 무의식 속에 고착된 결과이다."
+      ],
+      "a": 3,
+      "h": "인지 이론은 무의식보다는 현재 환자가 세상을 바라보는 '비합리적 생각(왜곡된 틀)'에 집중합니다.",
+      "e": "영유아기 고착 및 무의식적 갈등은 프로이트의 '정신분석적(역동적)' 접근입니다. 인지 이론(벡의 인지삼제)은 자신, 세상, 미래에 대한 부정적이고 왜곡된 사고방식(인지적 왜곡)을 우울증의 원인으로 봅니다."
+    },
+    {
+      "level": "중",
+      "q": "우울증상 회복기에 있는 환자를 돌볼 때 간호사가 특별히 '자살 위험성'을 긴밀히 사정해야 하는 병태생리적/심리적 이유는 무엇인가? [강의/교재]",
+      "o": [
+        "회복기에는 혈중 세로토닌 수치가 갑자기 0으로 떨어지기 때문이다.",
+        "가장 심한 급성기 때는 실행할 기력조차 없다가, 회복기에 접어들며 약물 효과로 '활력(에너지)'이 먼저 회복되면서 자살을 실행에 옮길 힘이 생기기 때문이다.",
+        "회복기에는 퇴원 준비로 인해 환자가 극심한 공포를 느껴 반항심을 표출하기 때문이다.",
+        "항우울제가 뇌의 공격 중추를 직접적으로 자극하여 타인과 자신을 공격하게 만들기 때문이다."
+      ],
+      "a": 1,
+      "h": "마음의 우울함(절망감)은 아직 남아있는데, 몸을 움직일 수 있는 에너지(활력)가 먼저 돌아올 때가 가장 위험합니다.",
+      "e": "우울증 회복기(치료 후 2~3주경)에는 주관적 우울 기분은 아직 완전히 회복되지 않은 상태에서 신체적 '활력'이 먼저 개선되므로, 미뤄두었던 자살을 실제로 행동에 옮길 에너지가 생겨 가장 위험한 시기입니다."
+    },
+    {
+      "level": "중",
+      "q": "우울증 환자와의 치료적 의사소통 시 적용할 수 있는 가장 훌륭한 응답 사례는? [교재/강의 복합]",
+      "o": [
+        "\"다른 사람들은 다 잘 사는데 왜 당신만 유독 그렇게 부정적이신가요?\"",
+        "\"제가 보기에 환자분은 전혀 우울해 보이지 않아요. 기운 내세요!\"",
+        "\"지금 많이 힘들고 고통스러우시군요. 제가 곁에 있으면서 도울 수 있는 방법을 함께 찾아보겠습니다.\"",
+        "\"빨리 기운을 차려서 밀린 집안일도 하고 가족들을 돌보셔야죠.\""
+      ],
+      "a": 2,
+      "h": "환자의 감정을 인정(수용)하고 함께 하겠다는 의지(현존)를 보여주는 것이 정답입니다.",
+      "e": "비난, 상투적 위로, 이전의 책임(집안일) 부여는 우울증 환자의 좌절감을 악화시킵니다. 환자의 고통을 있는 그대로 인정(수용)하고 희망과 연대를 제시하는 3번이 가장 치료적입니다."
+    },
+    {
+      "level": "중",
+      "q": "신체적 질환이나 그 치료 과정이 뇌 기능에 영향을 주어 이차적으로 우울증을 유발할 수 있다. 교재에서 언급된 우울증 유발 관련 신체질환이나 상태가 아닌 것은? [교재]",
+      "o": [
+        "갑상선 기능 저하증",
+        "파킨슨병 및 다발성 경화증",
+        "맹장염(충수돌기염) 절제 수술 직후의 급성 통증",
+        "만성 췌장염 및 간경화"
+      ],
+      "a": 2,
+      "h": "만성적이고 내분비/신경계에 전신적 영향을 미치는 질환들이 주로 우울증을 동반합니다.",
+      "e": "단순 급성 통증이나 단기적 외과 질환보다는 호르몬 분비 이상(갑상선 등), 만성 대사성 질환(간경화 등), 퇴행성 뇌신경 질환(파킨슨병 등)이 우울증 유발과 깊은 관련이 있습니다."
+    },
+    {
+      "level": "중",
+      "q": "난치성 우울증이나 심한 자살 충동, 또는 임산부처럼 약물 투여가 곤란한 심각한 우울증 환자에게 임상적으로 매우 극적이고 빠른 효과를 나타내어 실시하는 생물학적 치료법은? [강의]",
+      "o": [
+        "전두엽 절제술",
+        "전기경련치료 (ECT, Electroconvulsive Therapy)",
+        "최면 요법",
+        "향기 요법(아로마테라피)"
+      ],
+      "a": 1,
+      "h": "뇌에 전기적 자극을 주어 인위적으로 짧은 발작을 유도해 뇌 신경전달물질 체계를 리셋하는 방법입니다.",
+      "e": "전기경련치료(ECT)는 대중의 부정적 선입견과 달리, 항우울제에 반응하지 않거나 즉각적인 개입이 필요한 중증 자살위험 우울증 환자에게 매우 안전하고 효과적인 치료법입니다."
+    },
+    {
+      "level": "중",
+      "q": "우울증 평가에 사용되는 CES-D(Center for Epidemiologic Studies Depression Scale) 척도에 대한 올바른 설명은? [교재 추론]",
+      "o": [
+        "점수가 높을수록 정신건강이 완벽하게 양호함을 의미한다.",
+        "일생 동안의 우울 경험을 단 한 번 측정하여 평생의 진단 기록으로 남긴다.",
+        "지난 일주일 동안의 증상 빈도를 자가 평가하여, 총점 20점 이상이면 우울증이 의심되어 전문가 상담이 권장된다.",
+        "오직 의사만이 환자를 관찰하고 채점할 수 있는 고도의 객관적 도구이다."
+      ],
+      "a": 2,
+      "h": "스스로 지난주의 내 마음 상태를 점검해보는 자가 진단 표입니다.",
+      "e": "교재에 수록된 우울증 자가 테스트(CES-D 변형)는 지난 1주일간의 증상 빈도를 환자 스스로 체크하는 자기보고식 척도이며, 20점 이상일 경우 임상적 우울증 가능성이 있어 전문가 진료를 권합니다."
+    },
+    {
+      "level": "중",
+      "q": "우울증 환자의 '수동성 벗어나기'와 '인지 변화'를 위한 간호사의 구체적 중재로 가장 알맞은 것은? [교재/강의]",
+      "o": [
+        "환자가 병실 침대에 누워만 있도록 식사와 용변을 모두 대신 치워준다.",
+        "환자가 일상적 활동(예: 세수하기, 밥 먹기)을 스스로 수행하도록 격려하고, 달성 시 \"혼자 힘으로 잘 해내셨네요\"라고 피드백한다.",
+        "환자의 모든 결정을 간호사가 대신 내려주어 환자의 뇌 휴식을 돕는다.",
+        "환자가 스스로 한 행동의 미흡한 점을 찾아내어 꼼꼼하게 지적한다."
+      ],
+      "a": 1,
+      "h": "환자가 아주 작은 것이라도 스스로 선택하고 행동하여 무기력감의 늪에서 빠져나오게 해야 합니다.",
+      "e": "우울증 환자의 수동성을 극복하기 위해서는 타인이 전적으로 다 해주는 것보다, 환자 스스로 할 수 있는 작은 목표를 세워 실천하게 하고 그 성취를 인정해주는 것이 효과적입니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

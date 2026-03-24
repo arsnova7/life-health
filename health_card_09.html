@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9강 - 생활과 건강 플래시카드</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* 1. 컨테이너 너비를 850px로 넓혀서 글자가 옆으로 퍼지게 했습니다 */
+        .container { max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; }
+        
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        
+        /* 2. 카드 높이를 400px로 키우고, 단어 단위 정렬(keep-all)을 추가했습니다 */
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            margin: 20px 0; 
+            min-height: 400px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 1.25rem; 
+            font-weight: bold; 
+            word-break: keep-all; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+            position: relative; 
+        }
+        
+        .card.flipped { transform: rotateY(180deg); }
+        .side { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: 20px; overflow-y: auto; }
+        .front { background: white; color: #333; }
+        .back { transform: rotateY(180deg); background: #f8f9fa; color: #5c6ac4; }
+        .controls { display: flex; justify-content: space-between; gap: 10px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; background: white; color: #764ba2; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>제9강 플래시카드</h1>
+            <p><span id="current">1</span> / <span id="total">50</span></p>
+        </div>
+        <div class="card" id="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="side front" id="question">질문 로딩 중...</div>
+            <div class="side back" id="answer">정답 로딩 중...</div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="prevCard()">이전</button>
+            <button class="btn" onclick="nextCard()">다음</button>
+            <button class="btn" onclick="location.href='index.html'">목록으로</button>
+        </div>
+    </div>
+
+    <script>
+        // 주석(//)을 제거하여 데이터를 정상적으로 읽게 수정했습니다.
+        const cards = [
+            {"q": "★★★ 무의식적 동기의 자각과 통찰에 기초한 '자기통제'를 정신건강의 기준으로 강조한 심리학자는? [강의/교재]", "a": "프로이트(Freud)"},
+    {"q": "★★★ 인간으로서의 효율성, 만족감, 성공감을 증진시키는 대인관계 과정을 정신건강의 기준으로 강조한 대인관계 이론가는? [강의/교재]", "a": "설리번(Sullivan)"},
+    {"q": "★★★ 객관적으로 현실을 파악하는 '이성'과 '양심'을 지니고, 생산적이며 세상과 관계를 맺는 사람을 건강하다고 본 학자는? [강의/교재]", "a": "프롬(Fromm)"},
+    {"q": "★★★ 마리 야호다(Marie Jahoda)가 제시한 정신건강 평가기준 6가지 중 첫 번째로, 자기이해, 자기수용, 자기개방을 포함하는 기준은? [2017년 기출/★★★ 워크북]", "a": "자신에 대한 태도"},
+    {"q": "★★★ 마리 야호다의 기준 중, 개인이 내·외적 갈등, 억압과 표현, 충동이나 기분 조절 간의 균형을 이루는 것을 의미하는 것은? [2016년 기출/교재]", "a": "통합(Integration)"},
+    {"q": "★★★ 마리 야호다의 기준 중, 스스로 판단하고 결정하며 조절하는 능력으로, 자신의 행동에 책임을 지는 것을 의미하는 것은? [2015년 기출/교재]", "a": "자율성(Autonomy)"},
+    {"q": "★★★ 마리 야호다의 기준 중, 다른 사람의 욕구나 감정에 공감하고 사회적 민감성을 지니며 객관적으로 상황을 파악하는 능력은? [교재]", "a": "현실지각"},
+    {"q": "★★★ 마리 야호다의 기준 중, 사회에서 요구하는 역할에 성공적으로 기능하고 세상에 효율적으로 대처하며 호혜적인 관계를 맺는 능력은? [교재]", "a": "환경에 대한 지배"},
+    {"q": "★★★ 마리 야호다의 기준 중, 자신의 잠재력을 개발하고 자아실현을 위해 노력하는 측면을 평가하는 기준은? [2019년 기출/교재]", "a": "성장, 발달, 자아실현"},
+    {"q": "★★★ 삶의 위기상황에 당황스러우나 적절한 관리로 대처할 수 있는 상태는 정신건강이 양호한 상태이다. (O/X) [★★★ 워크북]", "a": "O"},
+    {"q": "★★★ 정신건강은 단순히 정신질환이 없는 상태를 넘어, 사회 속에서 편안하게 기능하여 정신적으로 안녕한 상태를 의미한다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 매슬로(Maslow)의 기본욕구 5단계 중 가장 하위에 위치하며 생존과 직결된 기본적 욕구는? [교재]", "a": "생리적 욕구"},
+    {"q": "★★★ 매슬로의 욕구 중 생리적 욕구가 충족된 후 생기며, 질병이나 신체적 위협 상황에서 현저하게 나타나는 보호, 질서, 의존감 등의 욕구는? [★★★ 워크북/교재]", "a": "안전 욕구"},
+    {"q": "★★★ 매슬로의 욕구 중 타인과 어울리고 집단에 소속되어 애정을 나누고자 하는 욕구는? [교재]", "a": "사랑과 소속감의 욕구"},
+    {"q": "★★★ 매슬로의 욕구 중 자기 자신을 가치 있다고 느끼고 타인으로부터 인정과 존중을 받고자 하는 욕구는? [교재]", "a": "자아존중감 욕구"},
+    {"q": "★★★ 매슬로의 기본욕구 중 가장 최상위에 위치하며, 자신의 잠재력을 최대한 발휘하고자 하는 욕구는? [교재]", "a": "자아실현의 욕구"},
+    {"q": "★★★ 매슬로는 인간의 성향을 생리적/안전/소속감 등을 추구하는 '생존적 경향'과, 자아실현을 추구하는 '어떤 경향'으로 나누었는가? [강의/교재]", "a": "실현적 경향"},
+    {"q": "★★★ 내·외적 요구와 변화에 당면하여 만족스러운 심리적 평형상태를 유지하려는 과정을 무엇이라 하는가? [교재]", "a": "적응(Adaptation)"},
+    {"q": "★★★ 적응은 변화하는 환경에 자기를 맞추는 것뿐만 아니라, 적절치 못한 환경을 개선하려고 노력하는 과정도 포함한다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 효과적인 의사소통 기법 중, 상대방에게 시선을 맞추고 진지한 태도를 보이며 관심을 표현하는 기법은? [교재]", "a": "관심 기울이기"},
+    {"q": "★★★ 의사소통 시 상대방의 말이나 의도를 제대로 이해했는지 물어보거나 다시 요약하여 짚고 넘어가는 기법은? [교재]", "a": "확인하기"},
+    {"q": "★★★ 상대방의 이야기를 들으며 말 속에 담긴 기분이나 감정을 그의 입장에서 이해하고 받아들이는 의사소통 기법은? [교재]", "a": "공감하기"},
+    {"q": "★★★ 질문하기 기법 중, 상대방에게 '예' 혹은 '아니요'의 제한된 대답만을 요구하는 질문 방식은? [교재]", "a": "폐쇄적인 질문"},
+    {"q": "★★★ 상대방에게 따지는 듯한 불쾌감을 줄 수 있는 '왜'라는 질문 대신, '어떻게' 혹은 '무엇'으로 바꾸어 질문하는 것이 바람직하다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 갈등해결을 위해 요구되는 태도 중, 인간관계에서 갈등은 발생할 수밖에 없음을 받아들이는 태도는? [교재]", "a": "갈등의 불가피성 인정"},
+    {"q": "★★★ 갈등해결 시 상대방의 기대와 욕구는 나의 것보다 덜 중요하므로 철저히 무시해야 한다. (O/X) [교재]", "a": "X (나의 것과 똑같이 타당함을 인정해야 함)"},
+    {"q": "★★★ 갈등해결 기법 중, 상대방이 감정을 솔직하게 표현할 수 있도록 적극적으로 수용하며 들어주는 기법은? [★★★ 워크북/교재]", "a": "적극적 경청"},
+    {"q": "★★★ 고개를 끄덕이거나 미소 짓는 등의 비언어적 반응은 좋은 경청 방법에 필수적으로 포함된다. (O/X) [★★★ 워크북 연습문제]", "a": "O"},
+    {"q": "★★★ 갈등 상황에서 상대방을 비난하지 않고, 1) 수용할 수 없는 행동, 2) 그 행동의 결과, 3) 자신이 느끼는 감정을 객관적으로 진술하는 기법은? [강의/교재]", "a": "'나' 전달법 (I-message)"},
+    {"q": "★★★ 교류분석이론(에릭 번)에서 제시한 3가지 자아상태는 부모 자아, 아동 자아, 그리고 무엇인가? [강의]", "a": "성인 자아상태(Adult ego state)"},
+    {"q": "★★★ 교류분석이론 중 지나치게 감정적이고 억압된 특성을 띠며, 충동적인 행동을 유발할 수 있는 자아상태는? [강의/교재]", "a": "아동 자아상태"},
+    {"q": "★★★ 교류분석이론 중 권위적이고 비판적이거나 타인을 양육/통제하려는 특성을 띠는 자아상태는? [강의/교재]", "a": "부모 자아상태"},
+    {"q": "★★★ 이성적이고 현실적이며 객관적으로 정보를 분석하여 판단하는 특성을 지닌 가장 건강한 자아상태는? [강의/교재]", "a": "성인 자아상태"},
+    {"q": "★★★ 성숙한 사람의 인간관계 특성 중 하나로, 상대방의 의도나 감정을 왜곡하지 않고 있는 그대로 파악하는 능력은? [강의/교재]", "a": "상대방을 객관적이고 정확하게 지각하는 능력"},
+    {"q": "★★★ 보건복지부의 '정신건강을 지키기 위한 10대 수칙' 중 첫 번째로 강조되는 마음가짐은? [교재]", "a": "긍정적으로 세상 바라보기"},
+    {"q": "★★★ 정신건강 10대 수칙 중, 식사할 때 권장하는 방법은 '하루 세끼 맛있게 (  ) 식사하기'이다. [교재]", "a": "천천히"},
+    {"q": "★★★ 정신건강 10대 수칙에는 '때로는 손해 볼 줄도 알기'가 포함되어 있다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 일반적인 건강상태 평가 질문지(30문항)에서 긍정 문항(예: 잘 집중함)은 점수가 낮을수록, 부정 문항(예: 잠을 못 잠)은 역산하여 총점이 (높을수록/낮을수록) 정신건강이 양호함을 의미한다. [강의]", "a": "낮을수록"},
+    {"q": "★★★ 좋은 경청은 상대방의 말의 의미뿐만 아니라 감정까지도 느끼고 있다는 것을 표현하는 것이다. (O/X) [★★★ 워크북 연습문제]", "a": "O"},
+    {"q": "★★★ 의사소통 시 상대방에게 질문은 되도록 하지 않고 무조건 듣기만 하는 것이 가장 효과적인 방법이다. (O/X) [2019년 기출 응용/교재]", "a": "X (관심을 표현하는 적절한 개방형 질문 등은 효과적임)"},
+    {"q": "★★★ 자신에 대한 긍정적인 태도를 가지기 위해서는 자신을 있는 그대로 수용하는 객관적이고 현실적인 평가가 선행되어야 한다. (O/X) [강의/교재]", "a": "O"},
+    {"q": "★★★ 갈등해결 시 문제와 감정을 철저히 결합하여 한 번에 분출해야 해결이 빠르다. (O/X) [교재]", "a": "X (문제와 감정을 분리하고 이성적인 대안을 찾아야 함)"},
+    {"q": "★★★ 갈등은 한 번의 시도로 해결되지 않는 경우가 많으므로 여러 번의 시행착오와 실패 가능성을 인정해야 한다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 매슬로의 자아실현을 이룬 사람의 특성 중, '자신에게 인위적 목표를 부과하는 타인들을 즐겁게 하려 하지 않음'이 포함된다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 정신건강 평가기준에서 단일 기준만을 적용하여 모든 연령과 상황에 절대적으로 고정시켜 평가하는 것이 가장 과학적이다. (O/X) [강의/교재]", "a": "X (단일 기준 배제, 연속선상의 개념, 상황에 따른 융통성 필요)"},
+    {"q": "★★★ 나 전달법은 상대방의 행위를 분명하게 비판하여 자신의 권리를 지키기 위한 공격적 기법이다. (O/X) [교재]", "a": "X (비난 없이 수용할 수 없는 상황에 대해 진술하는 평화적 기법임)"},
+    {"q": "★★★ 2015-2019 기출문제에 다수 출제된 스트레스 원인, 음주, 흡연, 약물오남용(레이증후군 등) 관련 문항은 현재 개편된 9강(정신건강의 이해) 범위에 해당한다. (O/X) [통합출제원칙 필터링]", "a": "X (10강 스트레스 및 다른 강으로 이동한 과거의 유물이므로 출제 배제)"},
+    {"q": "★★★ 로저스(Rogers)가 말한 '충분히 기능하여 자기 성장과 성취를 이룬 사람'은 자신을 신뢰하고 용감하게 새로운 방식으로 표현하는 특성을 지닌다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 적응 과정에서 건강한 자아는 스트레스를 견디고 변화를 통해 성장할 수 있는 능력을 지닌다. (O/X) [교재]", "a": "O"},
+    {"q": "★★★ 대인관계 초기에는 넌지시 묻는 간접질문보다 취조하듯 따지는 '왜'라는 직접질문이 친밀감 형성에 더 유리하다. (O/X) [교재]", "a": "X ('왜'라는 질문은 불쾌감을 줄 수 있어 '어떻게/무엇'으로 바꾸는 것이 바람직함)"}
+        ];
+
+        let cur = 0;
+        const qEl = document.getElementById('question');
+        const aEl = document.getElementById('answer');
+        const curEl = document.getElementById('current');
+        const totEl = document.getElementById('total');
+
+        function updateCard() {
+            qEl.textContent = cards[cur].q;
+            aEl.textContent = cards[cur].a;
+            curEl.textContent = cur + 1;
+            totEl.textContent = cards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function nextCard() { cur = (cur + 1) % cards.length; updateCard(); }
+        function prevCard() { cur = (cur - 1 + cards.length) % cards.length; updateCard(); }
+
+        // 초기 실행
+        updateCard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [6강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제6강: 비뇨생식기계 & 암환자 건강관리 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "상", "q": "폐암 검진 대상자인 '30갑년(Pack-year)' 고위험군에 대한 역학적 계산으로 정확한 사례는? [강의록 심화]",
+      "o": [
+        "하루에 담배 1개비를 30일 동안 피운 사람",
+        "하루에 담배 반 갑(0.5갑)을 15년 동안 피운 사람",
+        "하루에 담배 1갑을 30년 동안 피우거나, 하루 2갑을 15년 동안 피운 사람",
+        "하루에 담배 30갑을 1년 동안 피우고 즉시 금연한 사람"
+      ],
+      "a": 2,
+      "h": "갑년(Pack-year) = 하루 흡연량(갑) x 흡연 기간(년) 입니다.",
+      "e": "30갑년은 매우 심한 흡연력을 의미하며, (1갑 * 30년 = 30), (2갑 * 15년 = 30) 등으로 누적 흡연량을 계산합니다."
+    },
+    {
+      "level": "상",
+      "q": "국가 암 검진 프로그램 중, 선별검사 도입에 있어 '의학적 이득에 대한 근거 불충분'을 이유로 일상적 권고안에서 배제된 암종과 그 검사 방법은? [강의록/교재 종합]",
+      "o": [
+        "자궁경부암 - 인유두종바이러스 검사",
+        "폐암 - 저선량 흉부 CT",
+        "갑상선암 - 초음파 검사",
+        "간암 - 간 초음파 검사"
+      ],
+      "a": 2,
+      "h": "너무 일찍 찾아내어 불필요한 수술(과잉진료)을 유발한다는 논란이 컸던 암입니다.",
+      "e": "갑상선암은 발생률 1위이지만, 무증상 성인을 대상으로 한 초음파 선별검사는 생존율 향상 등 이득에 대한 근거가 부족해 국가 권고안에서 제외(일상적 비권고)되었습니다."
+    },
+    {
+      "level": "상",
+      "q": "신장(Kidney) 내 네프론(Nephron)의 병태생리학적 기능 저하 시 발생할 수 있는 신체 내 항상성 파괴 현상으로 올바른 추론은? [오디오 응용]",
+      "o": [
+        "혈액 내 노폐물이 여과되지 못해 요독이 쌓이고, 수분 배출 실패로 혈압 상승 및 전신 부종이 발생한다.",
+        "인유두종바이러스가 신장에서 무한 증식하여 갑상선암으로 전이된다.",
+        "위산이 신장으로 역류하여 네프론이 녹아내리며 조기 포만감을 유발한다.",
+        "혈중 산소 농도가 급증하여 폐암을 자연 치유하는 효과를 낸다."
+      ],
+      "a": 0,
+      "h": "필터(여과기)가 막히면 찌꺼기가 쌓이고 물이 넘칩니다.",
+      "e": "네프론의 여과/재흡수/분비 기능(수분, 이온 조절 및 독성 배출)이 망가지면 체내에 노폐물이 쌓이는 요독증과 체액 과다로 인한 부종, 고혈압 등이 치명적으로 발생합니다."
+    },
+    {
+      "level": "상",
+      "q": "암 예방 및 관리의 연속선상에서 '1차 예방'과 '2차 예방'의 차이를 임상 사례에 맞게 정확히 분류한 것은? [2015~2019 기출 변형/강의록]",
+      "o": [
+        "1차 예방: 55세 흡연자가 폐암 의심으로 저선량 흉부 CT를 촬영함 / 2차 예방: 폐암 확진 후 절제 수술을 받음",
+        "1차 예방: B형 간염 백신을 접종하고 평소 금주를 실천함 / 2차 예방: 만 20세 이상 여성이 3년마다 자궁경부세포검사를 받음",
+        "1차 예방: 암의 완전치유를 위해 방사선 요법을 시작함 / 2차 예방: 암 예방 10대 수칙 포스터를 작업장에 부착함",
+        "1차 예방: 대변 잠혈이 발견되어 위내시경을 실시함 / 2차 예방: 짜고 탄 음식을 피하는 식단으로 바꿈"
+      ],
+      "a": 1,
+      "h": "1차: 병 안 걸리게 습관/백신. 2차: 병 걸린 것 일찍 찾기(검진).",
+      "e": "백신 접종과 금주는 질병 발생 전 차단(1차 예방)이며, 정기 검진(자궁경부세포검사 등)은 조기 발견을 위한 전형적인 2차 예방입니다."
+    },
+    {
+      "level": "상",
+      "q": "국민 암예방 10대 수칙 중 보건복지부 및 국가암정보센터에서 '음주'와 관련하여 공식적으로 명시하고 있는 가장 정확한 권고 내용은? [★★★ 워크북/강의록]",
+      "o": [
+        "술은 하루에 소주 1병 이내로만 마시기",
+        "술은 하루 두 잔 이내로만 마시기",
+        "심혈관 건강을 위해 매일 적포도주 세 잔씩 의무적으로 마시기",
+        "맥주는 발암물질이 없으므로 무제한 허용하기"
+      ],
+      "a": 1,
+      "h": "워크북 및 슬라이드에 기록된 정확한 문장입니다.",
+      "e": "제시된 강의록(Slide 251)과 워크북 텍스트에 따르면 음주 수칙은 \"4. 술은 하루 두 잔 이내로만 마시기\"로 명시되어 있습니다."
+    },
+    {
+      "level": "상",
+      "q": "과거 기출(2018년 Q35 등)에서 출제된 '암 예방 수칙'을 개편된 교재의 10대 수칙과 비교 검증할 때, 다음 중 예방 수칙 위반(발암 촉진) 행위에 해당하는 사례는? [기출 융합/★★★ 워크북]",
+      "o": [
+        "매일 주 5회 40분씩 땀이 날 정도로 빠르게 걷기 운동을 함",
+        "탄 고기의 고소한 맛을 선호하여 일주일에 3회 이상 바베큐의 탄 부분을 섭취함",
+        "간암 가족력이 있어 B형 간염 항체 검사 후 예방접종을 완료함",
+        "신선한 제철 채소와 과일을 식단에 매끼 포함함"
+      ],
+      "a": 1,
+      "h": "불에 직접 구워 탄 고기에는 벤조피렌 등 강력한 발암물질이 생성됩니다.",
+      "e": "암 예방 수칙 3번 \"음식을 짜지 않게 먹고, 탄 음식 먹지 않기\"를 정면으로 위반하는 발암 유발 행위입니다."
+    },
+    {
+      "level": "상",
+      "q": "우리나라 남녀 통합 암 발생 통계의 거시적 추이(Trend) 변화에 대한 보건사회학적 해석으로 가장 타당한 것은? [오디오 심화]",
+      "o": [
+        "수십 년간 부동의 1위였던 위암이 감소하고 갑상선암과 폐암, 유방암 등이 급증하는 등 암 발생 양상이 서구화 및 조기검진 활성화의 영향을 받아 변화하고 있다.",
+        "2021년 기준 모든 남성은 전립선암, 모든 여성은 위암에 의해서만 사망하고 있다.",
+        "갑상선암은 치유율이 0%에 수렴하는 치명적인 암으로 변이되어 발생률 1위가 되었다.",
+        "국민 암예방 10대 수칙이 실패하여 과거에 없던 새로운 신종 바이러스 암이 1위를 차지했다."
+      ],
+      "a": 0,
+      "h": "오디오 강의: 과거 위암 1위에서 현재 갑상선암(검진 발달), 대장/유방암(서구화), 폐암 등으로 패턴이 변했습니다.",
+      "e": "강의 오디오에 따르면, 과거 위암 중심에서 현재 갑상선암 발견 급증, 남성 폐암 1위 역전, 여성 유방암 1위 등 질병 발생 추이가 크게 변화하고 있음을 알 수 있습니다."
+    },
+    {
+      "level": "상",
+      "q": "위암의 증상과 조기 발견의 한계성에 대해 워크북 내용을 바탕으로 간호사가 환자에게 교육할 때 가장 적절한 설명은? [★★★ 워크북 응용]",
+      "o": [
+        "위암은 시작되자마자 명치가 찢어지는 듯한 통증이 오므로 내시경 없이도 확진이 가능합니다.",
+        "위암 초기에는 소화불량이나 식후 더부룩함 등 아주 가벼운 위염 증상과 비슷해 방치하기 쉬우므로, 증상이 없더라도 권고 주기에 맞춰 내시경 검진을 받는 것이 생명입니다.",
+        "대변에 피가 섞여 나오는 잠혈은 변비의 증상일 뿐 위암과는 절대 무관하니 안심하십시오.",
+        "위암 환자는 밥을 먹으면 위산이 중화되어 병이 저절로 나으니 뷔페에서 과식하십시오."
+      ],
+      "a": 1,
+      "h": "위암 증상(소화불량, 포만감)은 워낙 흔한 증상이라 암이라고 의심하기 어렵습니다.",
+      "e": "위암 초기 증상은 특이적이지 않아(경미한 불편감) 일찍 발견하기 매우 어려우므로 정기적인 암 검진(2차 예방)이 필수적입니다."
+    },
+    {
+      "level": "상",
+      "q": "암 치료를 앞둔 환자의 보호자가 \"무조건 암을 뿌리 뽑는(완전치유) 가장 독한 항암제를 당장 투여해주세요!\"라고 요구할 때, 의료진이 고려해야 할 3대 현실적 요소에 근거한 올바른 답변은? [★★★ 워크북 심화]",
+      "o": [
+        "네, 무조건 환자의 체력이나 종양 크기와 무관하게 최고 용량을 즉시 투여하겠습니다.",
+        "치료 방법은 무조건 100% 컴퓨터가 추첨하여 결정하므로 의료진의 개입은 불가능합니다.",
+        "치료 목적(완전치유 vs 생존연장)을 정하기 위해 환자분의 현재 체력(상태), 암세포의 종류(형태/크기), 그리고 전이 여부(진행 정도)를 종합적으로 분석한 후 최적의 방법을 선택해야 합니다.",
+        "국민 암예방 10대 수칙만 낭독해 주면 암세포가 사라지니 약물은 필요 없습니다."
+      ],
+      "a": 2,
+      "h": "워크북 명시: 환자 상태, 종양 형태/크기, 암 진행 정도를 고려하여 목적(치유 vs 연장)에 맞게 치료법을 택합니다.",
+      "e": "암 치료(수술, 화학, 방사선)는 환자의 상태, 종양의 형태/크기, 진행 정도를 반드시 현실적으로 평가하여 치료의 득실을 따진 후 적용해야 합니다."
+    },
+    {
+      "level": "상",
+      "q": "과거 기출(2016 Q36, 2017 Q36 등)에 다수 출제되었던 '건강정보의 질 평가(적절성, 현시성, 경고성)' 개념이 개편된 6강(비뇨기계, 암) 출제 원칙에 부합하는가? [통합 출제 원칙 적용]",
+      "o": [
+        "부합한다. 암 검진 정보를 인터넷에서 찾을 때 필요하기 때문에 6강의 핵심이다.",
+        "부합하지 않는다. 건강정보 평가는 1강 '건강의 이해' 파트의 내용이며, 6강 소스에는 전혀 존재하지 않는 과거 챕터의 문제이므로 배제해야 한다.",
+        "부합한다. 신장의 여과율을 계산할 때 현시성이 필요하다.",
+        "부합하지 않지만, 기출문제 1번 문제이므로 예의상 출제해야 한다."
+      ],
+      "a": 1,
+      "h": "현재 제공된 6강의 소스(강의, 워크북)는 오직 신장과 암만 다룹니다.",
+      "e": "구 기출 파일의 앞번호 문제들(건강정보 평가, 영양소, 식품구성탑 등)은 6강 범위 밖의 내용이므로 정밀 필터링 원칙에 따라 무조건 삭제/배제해야 합니다."
+}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

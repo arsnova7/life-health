@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [15강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제15강: 노년기 건강문제와 관리 2 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "중", "q": "뇌사(Brain death)와 장기기증의 상관관계에 대한 보건의료적 설명으로 올바른 것은? [교재/강의]",
+      "o": [
+        "뇌사자는 스스로 호흡할 수 있으므로 장기기증 수술이 불필요하다.",
+        "뇌사는 뇌 전체의 기능이 소실되었으나 심장은 기계적 도움으로 잠시 뛰게 할 수 있어, 이 골든타임 내에 신장, 간, 심장 등의 생체 장기기증이 가능하다.",
+        "식물인간 상태가 뇌사보다 장기기증에 의학적으로 더 적합하다.",
+        "뇌사 판정은 의사 1명의 육안 확인만으로 1분 내에 즉시 결정되어 장기를 적출한다."
+      ],
+      "a": 1,
+      "h": "장기(간, 심장 등)가 썩지 않도록 기계로 피를 돌려주면서 기증을 준비하는 상태입니다.",
+      "e": "뇌사는 뇌 기능이 정지되었으나 인공호흡기 등으로 심폐 기능을 일시적으로 유지할 수 있는 상태이므로, 이 짧은 기간 동안 타인에게 생명을 나누어주는 장기기증이 가능합니다."
+    },
+    {
+      "level": "중",
+      "q": "영국 등 선진국이 호스피스 및 완화의료(Palliative care) 제도를 강화하는 핵심적인 철학적/보건학적 이유는 무엇인가? [강의]",
+      "o": [
+        "국가의 의료 예산을 절감하기 위해 환자를 빨리 사망에 이르게 하려고",
+        "급성기 질환 치료 기술이 퇴보하여 대안이 없기 때문",
+        "좋은 삶을 누릴 권리처럼 '좋은 죽음(품위 있고 고통 없는 임종)' 또한 국민이 동등하게 누려야 할 기본적 권리로 인식하기 때문",
+        "병원 침상을 비워 젊은 환자들을 입원시키기 위한 강제 조치"
+      ],
+      "a": 2,
+      "h": "요람에서 무덤까지, 마지막 순간의 질(Quality of Death)도 인권입니다.",
+      "e": "영국 등은 죽음의 질 지수 상위권 국가로, '좋은 죽음'을 인간의 기본권으로 보며 말기 환자가 신체적 통증과 심리적 고통 없이 존엄하게 생을 마감할 수 있도록 국가 차원에서 완화의료를 지원합니다."
+    },
+    {
+      "level": "중",
+      "q": "연명의료결정법에서 금지하고 있는 보호자의 행동은 무엇인가? [교재/강의]",
+      "o": [
+        "환자의 평소 신념이나 가치관을 의료진에게 전달하는 행위",
+        "환자의 유언장을 변호사와 함께 작성하도록 돕는 행위",
+        "의학적 판단이 아직 내려지지 않았거나 치료가 가능함에도, 보호자 임의의 부당한 요구로 의료행위(연명의료) 시행 여부를 강제하는 행위",
+        "환자의 통증을 줄여달라고 진통제를 요청하는 행위"
+      ],
+      "a": 2,
+      "h": "생명의 결정권은 환자 본인과 의학적 팩트에 있으며, 보호자의 경제적/감정적 이유로 생명이 단축되어서는 안 됩니다.",
+      "e": "보호자가 경제적 부담이나 개인적 이유로 부당하게 연명의료 중단을 요구하여 환자의 생명권이 침해되는 것을 막기 위해, 반드시 엄격한 '의학적 판단'이 선행되어야 함을 법으로 명시하고 있습니다."
+    },
+    {
+      "level": "중",
+      "q": "죽음에 대한 긍정적 수용이 개인의 건강에 미치는 영향을 분석한 2016년 인식 조사 결과로 타당한 것은? [강의 심화]",
+      "o": [
+        "죽음을 두려운 파멸로만 생각하는 사람은 정신 건강 지수가 3배 상승한다.",
+        "사후 세계를 믿고 죽음을 '삶의 완성'으로 긍정적으로 받아들이는 사람은, 그렇지 않은 사람보다 정신적, 사회적, 영적 건강 상태가 유의미하게 더 양호하게 나타났다.",
+        "죽음에 대해 긍정적인 사람은 오히려 신체 면역력이 급감하여 단명한다.",
+        "죽음을 생각하는 것 자체가 스트레스이므로 평생 죽음이라는 단어를 입에 올리지 않아야 건강하다."
+      ],
+      "a": 1,
+      "h": "죽음을 편안하게 받아들일 준비가 된 사람의 마음이 훨씬 건강합니다.",
+      "e": "강의에 언급된 서울대병원 연구에 따르면, 죽음을 고통이나 두려움이 아닌 삶의 완성으로 수용하는 태도를 가진 사람들이 정신/사회/영적 건강 지표에서 약 1.4배 더 긍정적인 결과를 보였습니다."
+    },
+    {
+      "level": "중",
+      "q": "최근 우리나라의 '죽음의 질 지수(Quality of Death Index)' 순위 상승이 시사하는 보건의료적 의미는 무엇인가? [강의 추론]",
+      "o": [
+        "한국의 인구가 감소하여 사망자 수가 절대적으로 줄어들었음을 의미한다.",
+        "급성기 질환 치료(수술 등)에만 집중하던 의료 시스템이 만성 질환 및 말기 환자의 통증 관리, 호스피스 완화의료 등 '임종 돌봄의 질' 향상으로도 균형 있게 발전하고 있음을 의미한다.",
+        "한국의 모든 노인이 병원이 아닌 집에서 사망하고 있음을 증명한다.",
+        "한국에서는 더 이상 암으로 사망하는 사람이 없음을 의미한다."
+      ],
+      "a": 1,
+      "h": "살리는 기술뿐만 아니라, 잘 보내주는 기술(완화의료)도 발전하고 있다는 뜻입니다.",
+      "e": "죽음의 질 지수가 2010년 40개국 중 32위에서 2015년 80개국 중 18위로 크게 도약한 것은, 고령화에 발맞춰 호스피스 병동 확대, 연명의료결정법 등 말기 돌봄 환경이 크게 개선되고 있음을 방증합니다."
+    },
+    {
+      "level": "중",
+      "q": "장기기증 대기자와 기증자의 수요-공급 불균형 현상을 타개하기 위한 제도적 노력으로 볼 수 없는 것은? [강의]",
+      "o": [
+        "뇌사 추정자 발생 시 의료기관의 신고 의무화",
+        "독립 장기 구득 기관의 설립 및 운영",
+        "장기 기증에 동의하는 가족의 범위를 대폭 축소하여 기증 절차를 원천 차단함",
+        "뇌사자를 발굴하고 관리하는 의료기관에 인센티브 제공"
+      ],
+      "a": 2,
+      "h": "기증을 장려하려면 절차의 문턱을 낮추고 동의 과정을 합리적으로 완화해야 합니다.",
+      "e": "정부는 장기기증 활성화를 위해 뇌사 판정 절차를 간소화하고 가족의 동의권을 합리적으로 완화(조건 완화)하여 기증의 진입 장벽을 낮추고 있습니다."
+    },
+    {
+      "level": "중",
+      "q": "웰다잉(Well-dying) 문화의 사회적 확산 배경으로 가장 적절한 것은? [★★★ 워크북/강의]",
+      "o": [
+        "인간 수명이 줄어들어 젋은 층의 사망률이 급증했기 때문이다.",
+        "현대 의학의 기계적 연명치료가 보편화되면서, 오히려 중환자실에서 고통스럽게 죽음을 맞는 경우가 늘어나자 '인간답게 품위 있는 임종'에 대한 성찰과 요구가 대두되었기 때문이다.",
+        "병원 장례식장의 수익 창출을 위한 마케팅 전략 때문이다.",
+        "안락사를 합법화하여 인구를 조절하려는 국가적 목적 때문이다."
+      ],
+      "a": 1,
+      "h": "기계에 온몸이 묶인 채 의식 없이 연명하는 것이 과연 좋은 삶인가에 대한 반성에서 시작되었습니다.",
+      "e": "의학 기술 발달로 수명은 연장되었으나, 무의미한 연명치료로 인해 존엄성이 훼손된 채 고통스럽게 생을 마감하는 부작용이 발생하자, 질 높은 죽음(웰다잉, 존엄사)에 대한 사회적 각성이 일어났습니다."
+    },
+    {
+      "level": "중",
+      "q": "의료현장에서 '의사'가 연명의료 중단 등 윤리적 결정을 내릴 때 가장 기본적으로 준수해야 할 원칙은? [교재/강의 종합]",
+      "o": [
+        "환자의 예후나 의학적 팩트보다 가족의 감정적 호소를 무조건 따른다.",
+        "의학적 판단(회생 불가능성)을 최우선으로 하되, 환자의 자기결정권과 최선의 이익을 종합적으로 고려하여 법적 절차에 따라 진행한다.",
+        "환자의 나이가 80세 이상이면 보호자 동의 없이 즉각 모든 치료를 중단한다.",
+        "의사의 개인적 종교 신념에 따라 모든 기계적 장치를 제거한다."
+      ],
+      "a": 1,
+      "h": "감정이나 외부 압력이 아닌, '의학적 근거'와 '환자의 의사'가 결합해야 합니다.",
+      "e": "연명의료 결정은 엄격한 의학적 판단(임종과정)이 필수적이며, 그 바탕 위에 환자의 뜻(사전연명의료의향서 등)을 반영하여 환자 최선의 이익을 보장하는 것이 원칙입니다."
+    },
+    {
+      "level": "중",
+      "q": "15강 워크북 연습문제 연계: 다음 중 알츠하이머 치매 환자의 병리적 뇌 변화 특징으로 올바른 것은? [★★★ 워크북 연습문제 추론]",
+      "o": [
+        "뇌혈관이 막혀 뇌조직의 일부가 허혈성 괴사를 일으킨다.",
+        "베타 아밀로이드(Beta-amyloid)라는 독성 단백질이 뇌세포 주변에 침착되고 신경세포가 사멸하여 뇌 전체가 심하게 위축(Shrink)된다.",
+        "갑상선 호르몬 부족으로 뇌 기능이 일시적으로 정지된다.",
+        "도파민 분비 세포가 파괴되어 손발이 떨린다."
+      ],
+      "a": 1,
+      "h": "머릿속에 나쁜 찌꺼기가 쌓이면서 뇌가 쪼그라드는 병입니다.",
+      "e": "1번은 혈관성 치매, 3번은 가역성(대사성) 치매, 4번은 파킨슨병의 특징입니다. 2번이 퇴행성 원발 질환인 알츠하이머의 전형적인 병태생리입니다."
+    },
+    {
+      "level": "중",
+      "q": "고(故) 김수환 추기경의 선종 사례가 우리 사회에 던진 생명윤리적 메시지로 가장 타당한 것은? [강의/교재]",
+      "o": [
+        "종교인은 병원 치료를 절대 받아서는 안 된다는 금기를 확립했다.",
+        "말기 질환 환자라도 인공호흡기를 달고 끝까지 생명을 연장해야 함을 증명했다.",
+        "무의미한 연명치료를 거부하고 자연스러운 죽음의 과정을 수용하는 '존엄사'의 가치를 몸소 실천하여 웰다잉 문화 확산에 기여했다.",
+        "장기기증은 절대 해서는 안 된다는 것을 보여주었다."
+      ],
+      "a": 2,
+      "h": "억지로 생명을 쥐어짜는 기계를 거부하고 평온하게 눈을 감으셨습니다.",
+      "e": "김수환 추기경은 임종 시 기계적 연명치료를 거부하고 자연스러운 죽음을 맞이함으로써, 한국 사회에 '존엄사'와 '품위 있는 죽음(웰다잉)'에 대한 깊은 성찰의 계기를 제공했습니다."
+    },
+    {
+      "level": "중",
+      "q": "★ 통합 출제 원칙 메타 검증 ★ 과거 기출문제 파일(2015-2019)에 수록된 다음 지문들 중, 현재 개편된 15강(죽음과 웰다잉) 범위에 부합하여 그대로 퀴즈로 낼 수 있는 것은?",
+      "o": [
+        "2015년 Q19: 다음 중 고혈압 관리에 대한 설명으로 옳지 않은 것은?",
+        "2017년 Q46: 수면의 기능이나 영향요인에 관한 설명으로 가장 적절한 것은?",
+        "2018년 Q50: 다음 중 우울증 치료방법으로 적절한 것은?",
+        "제공된 과거 기출 PDF(2015~2019년)에는 15강(연명의료, 뇌사, 웰다잉 등) 관련 문항이 전혀 없으므로, 원칙에 따라 모두 필터링하고 최신 15강 소스 텍스트만을 근거로 새롭게 출제해야 한다."
+      ],
+      "a": 3,
+      "h": "기출 파일들을 검색해보면 죽음, 뇌사, 연명의료 등의 키워드가 없습니다.",
+      "e": "출제 제1원칙(구 기출문제 정밀 필터링)에 따라, 최신 15강 범위(죽음, 연명의료 등)와 일치하지 않는 과거의 고혈압, 수면, 우울증 문항은 '과거의 유물' 혹은 타 단원 내용으로 간주하여 전면 배제해야 합니다."
+    },
+    {
+      "level": "중",
+      "q": "죽음을 대하는 태도를 교육할 때, 보건의료인이 가져야 할 거시적 관점은 무엇인가? [강의/교재]",
+      "o": [
+        "죽음은 철저한 의학적 실패이므로 환자 앞에서 절대 죽음을 언급하지 않는다.",
+        "인간의 일생을 하나의 연속 선상으로 볼 때, 웰빙(Well-being)의 완성은 결국 웰다잉(Well-dying)으로 이어진다는 철학적 바탕 하에 임종 돌봄을 제공한다.",
+        "가족들에게 장례식장의 비용 효율성만을 교육한다.",
+        "연명의료 기계의 작동 원리만 완벽히 암기하게 한다."
+      ],
+      "a": 1,
+      "h": "잘 사는 것의 끝은 결국 잘 죽는 것입니다.",
+      "e": "강의에 따르면, 인간 일생의 연속 선상에서 웰빙의 궁극적 완성은 웰다잉에 있으며, 이는 죽음을 삶의 한 과정으로 자연스럽게 수용하고 존엄성을 돕는 철학적 태도를 요구합니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

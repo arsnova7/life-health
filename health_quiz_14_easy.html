@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [14강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제14강: 노년기 건강문제와 관리 1 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "하", "q": "정상적으로 활동하던 사람이 여러 원인에 의한 뇌손상으로 인지기능이 떨어져 일상생활을 정상적으로 할 수 없는 후천적 신경장애를 의미하는 용어는? [★★★ 워크북/교재]",
+      "o": [
+        "건망증",
+        "섬망",
+        "치매 (Dementia)",
+        "조현병"
+      ],
+      "a": 2,
+      "h": "라틴어 어원으로 '정신이 나간 상태'를 뜻합니다.",
+      "e": "치매(Dementia)는 뇌의 후천적 손상으로 기억력, 언어능력, 지남력 등이 감소하여 일상생활에 심각한 지장을 주는 다발성 신경장애입니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 유병률을 감소시키는 데 가장 강력한 효과가 있는 것으로 입증된 '치매 보호 요인(예방 활동)'은 무엇인가? [★★★ 워크북/강의]",
+      "o": [
+        "하루 10시간 이상의 과도한 수면",
+        "텔레비전(바보상자) 연속 시청",
+        "중강도 이상의 규칙적인 운동",
+        "고지방, 고나트륨 식이 유지"
+      ],
+      "a": 2,
+      "h": "몸을 움직여 땀을 흘리면 치매 위험이 1/3로 줄어듭니다.",
+      "e": "연구에 따르면 중강도 이상의 규칙적인 운동을 하는 경우 그렇지 않은 사람에 비해 치매 유병률이 3분의 1로 급격히 줄어드는 보호 효과가 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "동일 연령대에 비해 기억력이 객관적으로 뚜렷하게 저하되어 있으나, 일상생활 수행능력은 아직 정상적으로 보존되어 있는 '치매 전 단계'를 지칭하는 용어는? [★★★ 워크북/교재]",
+      "o": [
+        "경도인지장애 (MCI)",
+        "가역성 섬망",
+        "중증 알츠하이머",
+        "말기 치매"
+      ],
+      "a": 0,
+      "h": "건망증과 치매의 사이, 즉 '가벼운(경도) 인지 손상'을 뜻합니다.",
+      "e": "경도인지장애(Mild Cognitive Impairment)는 정상에서 치매로 이행되는 중간 단계로, 일상생활은 가능하지만 인지기능 저하가 확인되는 고위험 상태입니다."
+    },
+    {
+      "level": "하",
+      "q": "퇴행성 질환 중 치매를 유발하는 가장 흔한 원인 질환(70% 이상 차지)으로, 뇌신경세포 주변에 베타 아밀로이드 단백질이 축적되어 서서히 발병하는 것은? [★★★ 워크북/교재]",
+      "o": [
+        "혈관성 치매",
+        "루이소체 치매",
+        "알츠하이머병 (알츠하이머 치매)",
+        "전두측두엽 치매"
+      ],
+      "a": 2,
+      "h": "1907년 이 병을 최초로 보고한 독일 의사의 이름이 붙었습니다.",
+      "e": "알츠하이머 치매는 가장 대표적인 비가역성(원발성) 치매로, 베타 아밀로이드 축적과 뇌조직 위축으로 점진적인 인지 저하를 유발합니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 환자가 보이는 '신경인지기능장애' 중, 현재 자신이 있는 시간, 장소, 그리고 주변 사람이 누구인지를 인식하지 못하는 장애는? [★★★ 워크북/교재]",
+      "o": [
+        "기억력 장애",
+        "지남력 장애 (오리엔테이션 상실)",
+        "실행증",
+        "언어 장애"
+      ],
+      "a": 1,
+      "h": "병원에서 '오늘 며칠인지 아세요? 여기가 어디죠?'라고 묻는 검사와 관련 있습니다.",
+      "e": "지남력(Orientation) 장애는 시간, 장소, 사람에 대한 인식 능력이 떨어지는 것으로 치매 초기에는 시간에 대한 개념부터 상실됩니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 증상의 중등도 단계 중, '돈 계산이 서툴러지고, 가전제품을 조작하지 못하며, 익숙한 장소에서도 길을 자주 잃어버리는' 단계는 언제인가? [★★★ 워크북/교재]",
+      "o": [
+        "치매 전 단계 (경도인지장애)",
+        "초기 치매",
+        "중기 치매",
+        "말기 치매"
+      ],
+      "a": 2,
+      "h": "이제 혼자서는 온전한 생활이 힘들어 타인의 도움이 본격적으로 필요한 시기입니다.",
+      "e": "치매 중기는 치매임을 누구나 쉽게 알 수 있는 단계로, 혼자서 지내기 어려우며 돈 계산 실수, 길 잃음, 가전제품 조작 불가 등의 일상생활 장애가 두드러집니다."
+    },
+    {
+      "level": "하",
+      "q": "보건복지부가 권고하는 '치매 예방 수칙 3.3.3' 중 '3금(禁, 참을 것)'에 해당하지 않는 것은? [★★★ 워크북/교재]",
+      "o": [
+        "절주 (술은 한 번에 3잔 이하)",
+        "금연 (담배는 즉시 끊음)",
+        "뇌손상 예방 (운동 시 보호장구 착용)",
+        "생선과 채소 섭취 제한"
+      ],
+      "a": 3,
+      "h": "생선과 채소를 골고루 먹는 것은 참아야 할 것(금)이 아니라 즐겨야 할 것(권)입니다.",
+      "e": "생선과 채소 섭취는 3권(운동, 식사, 독서) 중 '식사'에 해당하는 적극적 권장 사항입니다. 3금은 절주, 금연, 뇌손상 예방입니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 유병률을 높이는 관련 위험 요인(Risk factor)에 대한 설명으로 옳은 것은? [★★★ 워크북/교재]",
+      "o": [
+        "남성이 여성보다 치매 유병률이 높다.",
+        "배우자가 있는 사람이 독거노인보다 유병률이 3배 높다.",
+        "우울증이 있는 경우 치매 유병률이 2.7배 높게 나타난다.",
+        "두부외상(머리 손상) 과거력은 치매와 전혀 무관하다."
+      ],
+      "a": 2,
+      "h": "마음의 병인 '이것'이 심하면 뇌 기능도 빠르게 쇠퇴합니다.",
+      "e": "치매 발병 위험은 여성(2.6배), 무학(9배), 독거(2.9배), 두부외상(3.8배), 우울증(2.7배)에서 현저히 높게 나타납니다."
+    },
+    {
+      "level": "하",
+      "q": "고혈압, 당뇨병, 이상지질혈증 등의 만성질환과 뇌색전, 혈전 등을 적극적으로 치료함으로써 사전에 발병을 어느 정도 예방할 수 있는 치매의 종류는? [★★★ 워크북/교재]",
+      "o": [
+        "알츠하이머 치매",
+        "루이소체 치매",
+        "혈관성 치매",
+        "전두측두엽 치매"
+      ],
+      "a": 2,
+      "h": "뇌의 '핏줄(혈관)'이 막히거나 터져서 생기는 치매입니다.",
+      "e": "혈관성 치매는 전체 치매의 15~20%를 차지하며, 심뇌혈관 위험인자(고혈압, 당뇨 등)를 철저히 관리하면 발병을 예방할 수 있는 뇌혈관 질환 기원의 치매입니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 환자가 보이는 '정신행동증상(BPSD)' 중, 누군가 내 물건을 훔쳐 갔다고 굳게 믿고 타인을 지속적으로 의심하는 증상은? [★★★ 워크북/강의]",
+      "o": [
+        "우울",
+        "실인증",
+        "도둑 망상 (피해 망상)",
+        "무감동"
+      ],
+      "a": 2,
+      "h": "기억이 안 나는 것을 남의 탓으로 돌려 '누가 내 돈을 가져갔다'고 억지를 부리는 증상입니다.",
+      "e": "기억력 저하로 인해 자신의 물건 둔 곳을 잊은 치매 환자가 남을 의심하는 '도둑 망상'은 임상에서 가장 흔하게 나타나는 피해 망상입니다."
+    },
+    {
+      "level": "하",
+      "q": "건강한 노인에게 발생하는 단순 '건망증'과 병적인 '치매'의 가장 뚜렷한 임상적 차이점은? [강의/교재]",
+      "o": [
+        "건망증은 단어 구사가 안 되고 치매는 유창하다.",
+        "건망증은 힌트를 주면 기억을 회상해 내지만, 치매는 경험한 사실 자체를 지워버려 힌트를 주어도 기억해 내지 못한다.",
+        "건망증은 장기 기억이 먼저 상실되고 치매는 단기 기억이 보존된다.",
+        "건망증 환자는 길을 쉽게 잃고 치매 환자는 길 찾기에 능숙하다."
+      ],
+      "a": 1,
+      "h": "기억의 창고에서 꺼내는 속도가 느린 것(건망증)과 창고 안의 물건이 아예 타버린 것(치매)의 차이입니다.",
+      "e": "건망증은 뇌세포 노화로 인한 일시적 기억 인출의 어려움이므로 귀뜸(힌트)을 주면 기억하지만, 치매는 뇌세포 파괴로 정보 자체가 저장/유지되지 않아 전혀 기억하지 못합니다."
+    },
+    {
+      "level": "하",
+      "q": "감각과 운동 기능은 완전 정상임에도 불구하고, 뇌기능 저하로 인해 '운동화 끈 매기', '가위로 종이 자르기' 등 목적성 있는 단순 행위를 수행하지 못하는 치매 증상은? [★★★ 워크북/교재]",
+      "o": [
+        "실행증 (Apraxia)",
+        "실인증 (Agnosia)",
+        "언어장애 (Aphasia)",
+        "기억장애"
+      ],
+      "a": 0,
+      "h": "행동을 실행(Act)에 옮기는 데 장애가 생긴 것입니다.",
+      "e": "실행증은 운동기능이나 감각의 물리적 손상이 없으나 목적 있는 일련의 행동(도구 사용, 옷 입기 등)을 제대로 수행하지 못하는 뇌신경 장애를 뜻합니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 예방 수칙 3.3.3 중, '3행(行, 챙길 것)'에 속하는 적극적 실천 항목이 아닌 것은? [★★★ 워크북/교재]",
+      "o": [
+        "건강검진 (혈압, 혈당, 콜레스테롤 체크)",
+        "소통 (주위 사람들과 잦은 연락과 여가생활)",
+        "치매 조기발견 (적극적인 치매 검진)",
+        "절주 (술은 한 번에 3잔 이하로)"
+      ],
+      "a": 3,
+      "h": "절주는 참아야 하는 '3금'에 해당합니다.",
+      "e": "절주는 3금(절주, 금연, 뇌손상 예방) 항목이며, 3행은 건강검진, 소통, 치매 조기발견입니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 환자에게 의사소통 장애(언어장애)가 찾아올 때 가장 흔하게 나타나는 초기 대화 패턴은? [강의/교재]",
+      "o": [
+        "전문적인 의학 용어를 완벽하게 구사한다.",
+        "명확한 고유명사 대신 '이것', '저것' 등 지시 대명사 사용이 급격히 증가한다.",
+        "과거에 몰랐던 외국어를 유창하게 말하기 시작한다.",
+        "말의 속도가 정상인보다 3배 이상 빨라진다."
+      ],
+      "a": 1,
+      "h": "단어가 떠오르지 않아 얼버무리는 현상입니다.",
+      "e": "치매 언어장애 초기에는 사물의 정확한 명칭이 떠오르지 않아 '이것, 저것' 등의 대명사를 남발하며, 질병이 진행되면 엉뚱한 단어를 쓰거나 웅얼거리게 됩니다."
+    },
+    {
+      "level": "하",
+      "q": "치매 진단 및 평가 시, 점수에 영향을 미치는 변수를 통제하기 위해 반드시 '보정 작업'을 거쳐야 하는 3대 환자 특성 요인은? [강의 심화]",
+      "o": [
+        "혈압, 키, 몸무게",
+        "연령, 성별, 교육 수준(학력)",
+        "종교, 취미, 혈액형",
+        "음주량, 흡연량, 운동량"
+      ],
+      "a": 1,
+      "h": "나이가 많을수록, 여자일수록, 학교를 덜 다녔을수록 인지 점수가 낮게 나올 수밖에 없는 구조적 특성입니다.",
+      "e": "인지기능 검사(MMSE 등) 결과를 해석할 때는 환자의 연령, 성별, 교육 수준이 검사 점수에 큰 영향을 미치므로 이 세 가지 팩터를 기준으로 점수를 보정해야 객관적 치매 판단이 가능합니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [12강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제12강: 응급처치 1 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "하", "q": "불의의 사고나 질병 발생 시 신속한 응급처치 및 병원진료를 통해 환자의 생명 위협을 예방하기 위한 유기적 연결체계를 무엇이라 하는가? [★★★ 워크북/교재]",
+      "o": [
+        "건강보험체계",
+        "응급의료체계 (EMS)",
+        "노인장기요양체계",
+        "만성질환관리체계"
+      ],
+      "a": 1,
+      "h": "신속한 119 출동과 병원 이송을 포함하는 시스템입니다.",
+      "e": "응급의료체계는 응급환자 발생 시 병원 전 처치, 이송, 병원 진료가 유기적으로 돌아가게 하는 시스템입니다."
+    },
+    {
+      "level": "하",
+      "q": "응급의료체계 중 '병원 전 단계(Pre-hospital phase)'에 해당하지 않는 활동은? [★★★ 워크북/교재]",
+      "o": [
+        "최초 목격자의 119 신고",
+        "전화상담원(Dispatcher)의 응급처치 요령 지도",
+        "119 구급대원의 현장 응급처치",
+        "응급실 의료진의 심전도 정밀 검사 및 응급수술"
+      ],
+      "a": 3,
+      "h": "응급실 안에서 벌어지는 일은 병원 '전' 단계가 아닙니다.",
+      "e": "응급실에서의 정밀 검사와 수술은 병원 도착 후 이루어지는 '병원 단계(In-hospital phase)'입니다."
+    },
+    {
+      "level": "하",
+      "q": "기도폐쇄 응급처치법인 '하임리히법(복부 밀쳐 올리기)'을 시행할 때, 구조자의 주먹 쥔 손을 위치시켜야 하는 정확한 신체 부위는? [★★★ 워크북/교재]",
+      "o": [
+        "가슴 정중앙 흉골 부위",
+        "배꼽과 명치(검상돌기) 중간 부위",
+        "하복부(배꼽 아래) 부위",
+        "목(인후두) 부위"
+      ],
+      "a": 1,
+      "h": "횡격막 아래를 압박하여 기도에 압력을 전달해야 합니다.",
+      "e": "하임리히법은 명치(검상돌기)와 배꼽의 중간 부위를 주먹 쥔 손의 엄지 쪽으로 빠르고 강하게 위로 밀쳐 올리는 방법입니다."
+    },
+    {
+      "level": "하",
+      "q": "심폐소생술 시 '가슴압박'을 시행하는 정확한 신체 위치는 어디인가? [교재/강의]",
+      "o": [
+        "명치 끝부분 (검상돌기)",
+        "가슴 중앙 (가슴뼈 부위)",
+        "왼쪽 가슴 심장 부위",
+        "오른쪽 쇄골 아래 부위"
+      ],
+      "a": 1,
+      "h": "가슴뼈의 절반 아래쪽, 즉 정중앙을 압박합니다.",
+      "e": "가슴압박은 가슴 중앙(흉골의 아래쪽 절반) 부위를 손꿈치로 압박하여 심장을 물리적으로 펌핑하는 과정입니다. 명치를 누르면 장기 손상 위험이 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "심장정지 환자의 생존확률을 최대한 높이기 위해 심폐소생술은 심정지 발생 후 어느 시간 이내에 시작하는 것이 가장 바람직한가? [2016년 기출/워크북]",
+      "o": [
+        "1분 이내",
+        "4~5분 이내",
+        "10~15분 이내",
+        "30분 이내"
+      ],
+      "a": 1,
+      "h": "뇌조직 손상이 시작되기 전의 '골든 타임'입니다.",
+      "e": "2016년 기출. 심정지 후 4~5분이 지나면 뇌에 산소 공급이 끊겨 비가역적인 뇌조직 손상이 시작되므로, 4~5분 이내에 심폐소생술을 시작해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "일반인 구조자가 쓰러진 사람을 발견했을 때, 심정지 여부를 확인하기 위해 가장 먼저 취해야 할 행동은? [2017년 기출/교재]",
+      "o": [
+        "환자의 입에 인공호흡부터 불어넣는다.",
+        "환자의 어깨를 두드리며 \"괜찮으세요?\"라고 소리쳐 반응을 확인한다.",
+        "환자의 맥박을 5분간 짚어본다.",
+        "환자의 배를 세게 눌러본다."
+      ],
+      "a": 1,
+      "h": "의식이 있는지 없는지 깨워보는 것이 첫 번째입니다.",
+      "e": "2017년 기출 응용. 현장 안전 확인 후, 환자의 어깨를 가볍게 두드리며 큰 소리로 의식(반응)을 확인하는 것이 심폐소생술의 첫 단계입니다."
+    },
+    {
+      "level": "하",
+      "q": "심폐소생술 절차 중, 환자의 반응이 없고 심정지가 의심될 때 즉시 취해야 할 행동으로 올바른 것은? [2016년 기출 응용/교재]",
+      "o": [
+        "가족이 올 때까지 가만히 기다린다.",
+        "환자의 입에 물을 부어 정신을 차리게 한다.",
+        "큰 소리로 주변 사람을 지목하여 119 신고와 자동심장충격기(AED)를 요청한다.",
+        "환자를 업고 직접 병원까지 뛰어간다."
+      ],
+      "a": 2,
+      "h": "혼자서 모든 것을 해결할 수 없으므로 신속하게 전문가를 불러야 합니다.",
+      "e": "반응이 없으면 즉시 주변 사람을 명확히 지목하여 119 신고와 AED를 요청해야 하며, 혼자일 경우 직접 119에 스피커폰으로 신고해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "인공호흡을 하기 위해 환자의 기도를 개방하는 가장 일반적인 방법은 무엇인가? [교재/강의]",
+      "o": [
+        "턱 당기고 이마 누르기",
+        "머리 기울임 - 턱 들어올리기 (Head tilt - chin lift)",
+        "하임리히법",
+        "목 뒤로 젖히고 코 누르기"
+      ],
+      "a": 1,
+      "h": "이마를 뒤로 젖히고 턱뼈 끝을 살짝 들어 올리는 자세입니다.",
+      "e": "구조자는 한 손으로 환자의 이마를 눌러 머리를 뒤로 기울이고, 다른 손으로 턱끝의 뼈 부분을 들어 올려 기도를 일직선으로 개방합니다."
+    },
+    {
+      "level": "하",
+      "q": "자동심장충격기(AED)의 작동 단계 중 가장 먼저 해야 할 일은 무엇인가? [교재/강의]",
+      "o": [
+        "가슴에 패드 부착하기",
+        "심전도 분석 버튼 누르기",
+        "전원 켜기",
+        "심장충격 버튼 누르기"
+      ],
+      "a": 2,
+      "h": "모든 전자기기의 첫 번째 작동 순서와 같습니다.",
+      "e": "AED를 가져오면 가장 먼저 전원 버튼을 켜야 합니다. 전원을 켜면 이후 음성 지시가 나와 행동을 안내해 줍니다."
+    },
+    {
+      "level": "하",
+      "q": "자동심장충격기(AED)가 '심전도를 분석 중입니다'라는 음성을 낼 때 구조자가 반드시 지켜야 할 사항은? [교재/강의]",
+      "o": [
+        "분석이 잘 되도록 환자의 가슴을 강하게 압박한다.",
+        "환자의 입에 인공호흡을 2회 불어넣는다.",
+        "오류가 나지 않도록 환자의 몸에서 손을 떼고 모두 물러난다.",
+        "환자의 맥박을 짚어본다."
+      ],
+      "a": 2,
+      "h": "구조자의 움직임이 심전도 기계에 혼선을 줄 수 있습니다.",
+      "e": "기기가 심장 리듬을 정확히 분석하기 위해서는 외부의 진동이나 접촉이 없어야 하므로, 구조자와 주변인 모두 환자에게서 떨어져야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "인공호흡 시 환자에게 숨을 불어넣을 때, 올바른 방법은 무엇인가? [교재/강의]",
+      "o": [
+        "코를 막지 않고 입으로만 강하게 5초간 불어넣는다.",
+        "환자의 코를 막고 구조자의 입을 밀착시킨 후, 평상시 호흡량으로 1초에 걸쳐 불어넣는다.",
+        "환자의 입을 막고 코로만 숨을 불어넣는다.",
+        "폐가 터질 정도로 최대한 깊은 숨을 들이마셔 강하게 뿜어낸다."
+      ],
+      "a": 1,
+      "h": "공기가 새지 않게 코를 막고, 위장으로 공기가 들어가지 않게 평상시 호흡만큼만 넣습니다.",
+      "e": "인공호흡은 기도를 개방한 상태에서 코를 막고, 평상시 호흡과 같은 양을 1초에 걸쳐 불어넣으며 가슴이 부풀어 오르는지 확인해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "심폐소생술의 절차가 올바른 순서로 나열된 것은? [2015년 기출 응용/워크북]",
+      "o": [
+        "가슴압박 - 인공호흡 - 기도유지 - 환자반응확인 - 응급의료호출",
+        "환자반응확인 - 119신고(응급의료호출) - 가슴압박 - 기도유지 - 인공호흡",
+        "인공호흡 - 가슴압박 - 환자반응확인 - 119신고 - 기도유지",
+        "기도유지 - 가슴압박 - 119신고 - 환자반응확인 - 인공호흡"
+      ],
+      "a": 1,
+      "h": "깨우고 -> 부르고 -> 누르고(C) -> 열고(A) -> 불어넣는다(B).",
+      "e": "최신 가이드라인에 따른 순서는 현장 및 반응 확인 -> 119 신고 및 AED 요청 -> 가슴압박(C) -> 기도유지(A) -> 인공호흡(B)의 C-A-B 순서입니다."
+    },
+    {
+      "level": "하",
+      "q": "심정지 환자 발생 시, 인공호흡 방법을 모르거나 감염 우려 등으로 인공호흡을 꺼리는 일반인 구조자에게 권장되는 심폐소생술 방법은? [강의]",
+      "o": [
+        "심폐소생술을 포기하고 119가 올 때까지 가만히 있는다.",
+        "가슴압박만 지속적으로 실시하는 '가슴압박 소생술(Hands-only CPR)'을 시행한다.",
+        "인공호흡만 단독으로 계속 실시한다.",
+        "배를 강하게 누르는 하임리히법을 반복한다."
+      ],
+      "a": 1,
+      "h": "가슴만 눌러줘도 혈액 속에 남은 산소가 뇌로 전달됩니다.",
+      "e": "인공호흡이 불가능하거나 꺼려지는 경우, 멈추지 않고 가슴압박만을 지속하는 '가슴압박 소생술'이 아무것도 하지 않는 것보다 생존율을 훨씬 높입니다."
+    },
+    {
+      "level": "하",
+      "q": "영아(1세 미만)에게 기도폐쇄가 발생했을 때 실시하는 올바른 응급처치법은? [★★★ 워크북/교재]",
+      "o": [
+        "영아를 세워 안고 배꼽 부위를 강하게 압박한다.",
+        "영아의 머리를 가슴보다 낮게 한 뒤, 어깻죽지 사이(견갑골 사이)를 손바닥으로 두드리는 '등 두드리기법'을 시행한다.",
+        "영아의 다리를 잡고 거꾸로 들어 올려 등을 강하게 내리친다.",
+        "핀셋을 입안 깊숙이 넣어 이물질을 억지로 빼낸다."
+      ],
+      "a": 1,
+      "h": "영아는 체구가 작아 성인의 하임리히법을 쓰면 장기 손상이 오므로 엎어놓고 등을 두드립니다.",
+      "e": "영아의 기도폐쇄 시에는 머리를 가슴보다 낮게 유지하고 등을 두드리는 '등 두드리기(Back blows)'와 '가슴 밀기'를 교대로 실시합니다. 거꾸로 들면 고관절 탈구 위험이 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "선의의 구조자가 생명이 위급한 환자에게 응급처치를 제공하다가 본의 아니게 재산이나 신체상의 피해를 입혔을 때, 고의나 중과실이 없다면 민/형사상 책임을 면제해주는 제도는? [강의/교재]",
+      "o": [
+        "의료법 면책 조항",
+        "선한 사마리아인 법 (Good Samaritan Law)",
+        "국가유공자 보상법",
+        "국민건강보험법"
+      ],
+      "a": 1,
+      "h": "곤경에 처한 사람을 대가 없이 도와준 성경의 인물 이름에서 유래했습니다.",
+      "e": "응급의료에 관한 법률 제5조의 2(선의의 응급의료에 대한 면책)에 명시된 일명 '선한 사마리아인 법'은 일반인의 적극적인 구조 활동을 독려하기 위해 책임을 감면해주는 제도입니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

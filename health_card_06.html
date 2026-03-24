@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6강 - 생활과 건강 플래시카드</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* 1. 컨테이너 너비를 850px로 넓혀서 글자가 옆으로 퍼지게 했습니다 */
+        .container { max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; }
+        
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        
+        /* 2. 카드 높이를 400px로 키우고, 단어 단위 정렬(keep-all)을 추가했습니다 */
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            margin: 20px 0; 
+            min-height: 400px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 1.25rem; 
+            font-weight: bold; 
+            word-break: keep-all; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+            position: relative; 
+        }
+        
+        .card.flipped { transform: rotateY(180deg); }
+        .side { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: 20px; overflow-y: auto; }
+        .front { background: white; color: #333; }
+        .back { transform: rotateY(180deg); background: #f8f9fa; color: #5c6ac4; }
+        .controls { display: flex; justify-content: space-between; gap: 10px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; background: white; color: #764ba2; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>제6강 플래시카드</h1>
+            <p><span id="current">1</span> / <span id="total">50</span></p>
+        </div>
+        <div class="card" id="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="side front" id="question">질문 로딩 중...</div>
+            <div class="side back" id="answer">정답 로딩 중...</div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="prevCard()">이전</button>
+            <button class="btn" onclick="nextCard()">다음</button>
+            <button class="btn" onclick="location.href='index.html'">목록으로</button>
+        </div>
+    </div>
+
+    <script>
+        // 주석(//)을 제거하여 데이터를 정상적으로 읽게 수정했습니다.
+        const cards = [
+            {"q": "★★★ 후복벽의 복막 뒤쪽에 좌우 한 개씩 위치하며, 강낭콩 모양으로 생긴 비뇨기계 장기는? [강의/교재]", "a": "신장(Kidney)"},
+    {"q": "★★★ 신장을 구성하는 가장 기본적인 단위로, 한쪽 신장에 약 100만~125만 개가 밀집되어 있는 구조물은? [강의/교재]", "a": "네프론(Nephron)"},
+    {"q": "★★★ 신장에서 걸러진 소변이 체외로 배출되기까지 거치는 해부학적 순서는? [강의/교재]", "a": "신장 -> 요관 -> 방광 -> 요도"},
+    {"q": "★★★ 신장의 가장 대표적인 생리적 기능으로, 몸속의 이것과 이온농도를 조절한다. 이것은? [2018년, 2019년 기출/강의]", "a": "물의 양 (수분)"},
+    {"q": "★★★ 혈액을 필터링하여 인체에 유해한 독성 물질을 체외로 배출하는 역할을 담당하는 주요 장기는? [강의/교재]", "a": "신장"},
+    {"q": "★★★ 2021년 통계 기준, 우리나라 남녀 전체에서 가장 많이 발생하는 암 1위는 무엇인가? [강의록/오디오]", "a": "갑상선암"},
+    {"q": "★★★ 과거 우리나라 발생 1위 암이었으나, 2021년 남성 통계에서 폐암에 이어 2위로 순위가 밀려난 암은? [강의록/오디오]", "a": "위암"},
+    {"q": "★★★ 2021년 통계 기준, 우리나라 여성에게서 가장 많이 발생하는 암 1위는? [강의록/오디오]", "a": "유방암"},
+    {"q": "★★★ 국민 암예방 10대 수칙 중, 가장 첫 번째로 강조되며 본인뿐만 아니라 타인이 피우는 연기도 피해야 하는 것은? [★★★ 워크북/교재]", "a": "담배 (금연 및 간접흡연 피하기)"},
+    {"q": "★★★ 암 예방을 위해 식단은 다채롭게 구성하고 채소와 무엇을 충분히 먹도록 권장하는가? [★★★ 워크북/교재]", "a": "과일"},
+    {"q": "★★★ 암 예방 수칙에 따르면, 음식은 짜지 않게 먹고 어떤 음식을 먹지 않도록 주의해야 하는가? [2016년 기출 응용/★★★ 워크북]", "a": "탄 음식"},
+    {"q": "★★★ 암 예방을 위한 건강한 음주 수칙으로, 술은 하루에 최대 몇 잔 이내로 마실 것을 권장하는가? [2016년 기출/★★★ 워크북]", "a": "하루 두 잔 이내"},
+    {"q": "★★★ 암 예방을 위한 운동 수칙은 주 5회 이상, 하루 최소 몇 분 이상 땀이 날 정도로 운동하는 것인가? [★★★ 워크북/강의록]", "a": "30분 이상"},
+    {"q": "★★★ 간암 발병을 막기 위해 예방접종 지침에 따라 반드시 맞아야 하는 백신은? [★★★ 워크북/강의록]", "a": "B형 간염 예방접종"},
+    {"q": "★★★ 자궁경부암 등을 예방하기 위해 성 매개 감염병에 걸리지 않도록 실천해야 하는 수칙은? [★★★ 워크북/강의록]", "a": "안전한 성생활 하기"},
+    {"q": "★★★ 발암성 물질에 노출되지 않도록 작업장에서 반드시 지켜야 하는 것은? [★★★ 워크북/강의록]", "a": "안전보건 수칙 지키기"},
+    {"q": "★★★ 암 발생의 병리적 변화가 시작되기 전에 생활습관 변화와 규제 등을 통해 미리 중재하는 활동은 몇 차 예방인가? [강의록/교재]", "a": "1차 예방"},
+    {"q": "★★★ 이미 암이 시작되었다 하더라도 증상 유무와 관계없이 '조기 발견 및 조기 진단'을 통해 치료하는 것은 몇 차 예방인가? [2015~2019년 기출/강의록]", "a": "2차 예방"},
+    {"q": "★★★ 7대 암 검진 권고안에 따르면, 자궁경부암 선별검사는 만 몇 세 이상의 여성을 대상으로 하는가? [강의록/교재]", "a": "만 20세 이상"},
+    {"q": "★★★ 자궁경부암 선별검사(자궁경부세포도말검사)의 권장 검진 주기는 몇 년인가? [강의록/교재]", "a": "3년"},
+    {"q": "★★★ 최근 10년 이내에 자궁경부암 검진에서 연속 3번 이상 음성으로 확인된 경우, 몇 세 이상부터는 선별검사를 권고하지 않는가? [강의록/교재]", "a": "75세 이상"},
+    {"q": "★★★ 폐암 검진 권고안의 대상이 되는 고위험군의 연령 기준은? [강의록/교재]", "a": "55~74세"},
+    {"q": "★★★ 폐암 고위험군을 규정하는 흡연력 기준으로, 하루 1갑씩 30년을 피운 양에 해당하는 용어는? [강의록/교재]", "a": "30갑년"},
+    {"q": "★★★ 과거 흡연자라도 금연한 지 몇 년이 경과한 사람은 폐암 고위험군 검진 대상에서 제외되는가? [강의록/교재]", "a": "15년"},
+    {"q": "★★★ 폐암 고위험군을 대상으로 1년마다 실시하는 선별검사 방법의 정확한 명칭은? [강의록/교재]", "a": "저선량 흉부 CT"},
+    {"q": "★★★ 갑상선암 조기 발견을 위해 무증상 성인에게 일상적인 초음파 선별검사가 적극적으로 권고된다. (O/X) [강의록/오디오]", "a": "X (근거가 불충분하여 일상적인 선별검사로는 권고하지 않음)"},
+    {"q": "★★★ 간암 고위험군 검진 대상자에 속하는 간 질환의 주요 원인 바이러스 두 가지는? [강의록/교재]", "a": "B형 간염, C형 간염"},
+    {"q": "★★★ 위암의 초기 증상으로, 식사량이 많지 않음에도 금방 배가 부른 느낌을 무엇이라 하는가? [★★★ 워크북]", "a": "조기 포만감"},
+    {"q": "★★★ 위암의 초기 증상은 경미한 소화불량이나 불편감 정도로 나타나 조기 발견이 쉽다. (O/X) [★★★ 워크북]", "a": "X (증상이 모호하여 일찍 발견하기 어려움)"},
+    {"q": "★★★ 위암이 진행되었을 때 나타날 수 있는 징후로, 대변 속에 눈에 보이지 않는 피가 섞여 나오는 것을 무엇이라 하는가? [★★★ 워크북/교재]", "a": "대변 잠혈"},
+    {"q": "★★★ 암을 치료하기 위한 3대 주요 치료 방법은 수술, 방사선요법, 그리고 무엇인가? [★★★ 워크북/교재]", "a": "항암화학요법"},
+    {"q": "★★★ 암 치료 방법을 선택할 때 치료의 목적이 '완전치유'인지 '이것'의 연장인지를 명확히 고려해야 한다. '이것'은? [★★★ 워크북/교재]", "a": "생존기간"},
+    {"q": "★★★ 암 치료 방법을 결정하기 위해 고려해야 할 3가지 현실적 요소는 환자의 상태, 종양의 형태나 크기, 그리고 암의 무엇인가? [★★★ 워크북/교재]", "a": "진행 정도"},
+    {"q": "★★★ 여성의 경우 자궁경부세포검사와 함께 보조적으로 실시할 수 있는 바이러스 검사는? [강의록/교재]", "a": "인유두종바이러스 검사"},
+    {"q": "★★★ 갑상선암은 우리나라에서 발생률 1위이지만, 치료가 잘 되어 치유율이 매우 높은 편이다. (O/X) [오디오/교재]", "a": "O"},
+    {"q": "★★★ 암 조기검진은 이상 소견이나 증상이 있을 때에만 받는 것이 원칙이다. (O/X) [강의록/교재]", "a": "X (증상이 없더라도 고위험 연령이거나 유발 요인이 있으면 정기적으로 받아야 함)"},
+    {"q": "★★★ 신장은 몸속의 물의 양뿐만 아니라 무엇의 농도를 조절하는가? [2018년, 2019년 기출/오디오]", "a": "이온농도"},
+    {"q": "★★★ 유방 자가검진 및 유방조영술을 통해 암을 일찍 찾아내는 행위는 1차 예방에 속한다. (O/X) [2015~2019 기출/강의록]", "a": "X (조기 진단이므로 2차 예방에 해당함)"},
+    {"q": "★★★ 간경변증 환자는 폐암보다 간암 발생의 고위험군에 속한다. (O/X) [강의록/교재]", "a": "O"},
+    {"q": "★★★ 암 예방 10대 수칙 중 자신의 체격에 맞는 '무엇'을 유지해야 하는가? [★★★ 워크북/강의록]", "a": "건강 체중"},
+    {"q": "★★★ 2021년 통계 기준, 여성의 암 발생 순위에서 대장암은 폐암보다 많이 발생한다. (O/X) [오디오]", "a": "O (유방암-갑상선암-대장암-폐암-위암 순)"},
+    {"q": "★★★ 흡연력이 없는 60세 성인도 매년 저선량 흉부 CT를 통한 폐암 검진이 필수적으로 권고된다. (O/X) [강의록/교재]", "a": "X (30갑년 이상의 고위험군에게만 권고됨)"},
+    {"q": "★★★ 위암 증상 중 질병이 상당히 진행되었을 때 나타나는 영양학적/소모성 증상은? [★★★ 워크북/교재]", "a": "체중 감소"},
+    {"q": "★★★ 네프론은 신장 1개당 대략 몇 개가 존재하는가? [오디오/교재]", "a": "100만~125만 개"},
+    {"q": "★★★ 신장의 위치는 복강 내 앞쪽에 위치하여 만지기 쉽다. (O/X) [오디오/교재]", "a": "X (후복벽의 복막 뒤쪽에 위치함)"},
+    {"q": "★★★ 75세 이상 여성 중 최근 10년 이내 자궁경부암 검진에서 연속 2번 음성으로 확인된 경우 검진을 중단한다. (O/X) [강의록/교재]", "a": "X (연속 3번 이상 음성일 때 중단 권고)"},
+    {"q": "★★★ 작업장에서 안전보건 수칙을 지키는 것은 발암성 물질 노출을 막기 위한 1차 예방 활동이다. (O/X) [강의록/교재]", "a": "O"},
+    {"q": "★★★ 신장에서 걸러진 소변이 머무는 주머니 모양의 기관은 요관이다. (O/X) [오디오/교재]", "a": "X (방광임)"},
+    {"q": "★★★ B형 간염 바이러스는 위암의 주된 유발 요인이다. (O/X) [★★★ 워크북/강의록]", "a": "X (위암이 아니라 간암의 주요 유발 요인임)"},
+    {"q": "★★★ 암 조기검진 지침에 따라 검진을 빠짐없이 받는 것은 국민 암예방 10대 수칙 중 하나이다. (O/X) [★★★ 워크북/강의록]", "a": "O"}
+        ];
+
+        let cur = 0;
+        const qEl = document.getElementById('question');
+        const aEl = document.getElementById('answer');
+        const curEl = document.getElementById('current');
+        const totEl = document.getElementById('total');
+
+        function updateCard() {
+            qEl.textContent = cards[cur].q;
+            aEl.textContent = cards[cur].a;
+            curEl.textContent = cur + 1;
+            totEl.textContent = cards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function nextCard() { cur = (cur + 1) % cards.length; updateCard(); }
+        function prevCard() { cur = (cur - 1 + cards.length) % cards.length; updateCard(); }
+
+        // 초기 실행
+        updateCard();
+    </script>
+</body>
+</html>

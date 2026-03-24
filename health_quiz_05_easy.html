@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [5강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제5강: 내분비계 & 근골격계 건강관리 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "하", "q": "인체 내에서 각종 기능을 조절하고 통합하는 화학물질인 '호르몬'을 혈액 안으로 분비하는 시스템은? [강의/교재]",
+      "o": ["신경계", "내분비계", "호흡기계", "소화기계"],
+      "a": 1,
+      "h": "갑상선, 췌장, 부신 등이 여기에 속합니다.",
+      "e": "내분비계(Endocrine system)는 호르몬을 혈류로 직접 분비하여 신체 기능을 조절하고 통합하는 역할을 합니다."
+    },
+    {
+      "level": "하",
+      "q": "당뇨병 관리의 가장 궁극적인 목표는 무엇을 정상에 가깝게 조절하는 것인가? [강의록/교재]",
+      "o": ["혈압", "체중", "혈당", "콜레스테롤"],
+      "a": 2,
+      "h": "포도당 수치를 일정하게 유지해야 합병증을 막을 수 있습니다.",
+      "e": "당뇨병(Diabetes Mellitus)은 매일의 적당한 '혈당' 수준을 유지하여 합병증을 예방하는 것이 관리의 목표입니다."
+    },
+    {
+      "level": "하",
+      "q": "당뇨병 환자에게 권장되는 가장 기본적이고 필수적인 두 가지 관리 요법은? [강의록/교재]",
+      "o": ["수술요법과 방사선요법", "식이요법과 운동요법", "면역요법과 한방요법", "수면요법과 명상요법"],
+      "a": 1,
+      "h": "우리가 일상에서 섭취하고 에너지를 소모하는 활동입니다.",
+      "e": "당뇨병 관리의 기본은 건강한 식습관(식이요법)과 신체활동(운동요법)이며, 이것으로 조절이 안 될 때 약물이나 인슐린을 사용합니다."
+    },
+    {
+      "level": "하",
+      "q": "과도한 열량 섭취와 잉여 열량의 저장으로 인해 체지방이 과다하게 축적된 상태를 뜻하는 용어는? [★★★ 워크북/교재]",
+      "o": ["골다공증", "고지혈증", "비만", "당뇨병"],
+      "a": 2,
+      "h": "체중이 과도하게 많이 나가는 상태를 포괄합니다.",
+      "e": "비만은 에너지의 섭취가 소모보다 많아 잉여 에너지가 체지방으로 과도하게 축적된 상태입니다."
+    },
+    {
+      "level": "하",
+      "q": "비만 관리를 위한 가장 바람직한 운동 형태로 교재에서 권장하는 것은? [★★★ 워크북/교재]",
+      "o": ["단거리 전력 질주", "무거운 역도 들기", "가벼운 조깅, 수영 등 유산소 운동", "무호흡 잠수"],
+      "a": 2,
+      "h": "산소를 충분히 소모하며 지방을 태우는 운동입니다.",
+      "e": "비만 관리 운동요법으로는 주 3~5회 규칙적인 걷기, 자전거 타기, 조깅, 수영 등의 유산소 운동이 효과적입니다."
+    },
+    {
+      "level": "하",
+      "q": "인체의 움직임과 자세 유지를 가능하게 하며 신체의 다른 조직을 지지해주는 해부학적 시스템은? [★★★ 워크북/교재]",
+      "o": ["순환기계", "신경계", "근골격계", "비뇨기계"],
+      "a": 2,
+      "h": "뼈와 근육으로 이루어져 있습니다.",
+      "e": "근골격계는 뼈, 근육, 연골, 인대, 관절로 구성되어 몸을 지지하고 움직임을 가능하게 합니다."
+    },
+    {
+      "level": "하",
+      "q": "뼈의 중요한 생리적 기능 중 하나로, 뼈 내부에서 혈액(적혈구 등)을 만들어내는 기능은? [강의/교재]",
+      "o": ["해독 기능", "조혈 기능", "여과 기능", "소화 기능"],
+      "a": 1,
+      "h": "피를 만든다는 뜻의 한자어입니다.",
+      "e": "뼈는 골수를 통해 혈액 세포를 생산하는 조혈(Hematopoiesis) 기능을 수행합니다."
+    },
+    {
+      "level": "하",
+      "q": "뼈의 질량이 감소하고 미세구조가 약해져 가벼운 충격에도 쉽게 골절이 발생하는 근골격계 질환은? [★★★ 워크북/교재]",
+      "o": ["퇴행성 관절염", "통풍", "골다공증", "류마티스 관절염"],
+      "a": 2,
+      "h": "뼈에 구멍이 많이 뚫려 약해진 상태를 의미합니다.",
+      "e": "골다공증(Osteoporosis)은 골밀도가 감소하여 뼈가 약해지고 골절 위험이 크게 증가하는 질환입니다."
+    },
+    {
+      "level": "하",
+      "q": "골다공증의 주된 영양학적 원인으로, 섭취가 부족할 때 뼈가 약해지는 두 가지 핵심 영양소는? [★★★ 워크북/교재]",
+      "o": ["비타민 C와 철분", "칼슘과 비타민 D", "비타민 A와 아연", "나트륨과 칼륨"],
+      "a": 1,
+      "h": "뼈를 구성하는 주성분과 그 흡수를 돕는 비타민입니다.",
+      "e": "칼슘과 비타민 D의 섭취 부족은 골다공증을 유발하는 강력한 위험 요인입니다."
+    },
+    {
+      "level": "하",
+      "q": "관절을 오래 사용하여 관절 연골이 닳아 없어지면서 발생하는 퇴행성 질환은? [★★★ 워크북/교재]",
+      "o": ["통풍", "골다공증", "퇴행성 관절염", "근위축증"],
+      "a": 2,
+      "h": "기계의 부품이 닳듯 노화와 사용량에 의해 발생합니다.",
+      "e": "퇴행성 관절염(골관절염)은 관절 연골의 마모로 인해 통증과 운동 장애가 발생하는 질환입니다."
+    },
+    {
+      "level": "하",
+      "q": "퇴행성 관절염 환자가 관절을 구부렸다 펼 때 연골 마모로 인해 특징적으로 들리는 소리 또는 느낌은? [★★★ 워크북/강의]",
+      "o": ["심음", "호흡음", "마찰음(Crepitus)", "장음"],
+      "a": 2,
+      "h": "뼈와 뼈가 부딪히며 나는 삐그덕거리는 소리입니다.",
+      "e": "연골이 닳아 뼈가 직접 마찰하면서 발생하는 마찰음은 퇴행성 관절염의 대표적 증상입니다."
+    },
+    {
+      "level": "하",
+      "q": "단백질의 일종인 '퓨린'의 대사 장애로 인해 발생하는 관절 질환은? [★★★ 워크북/교재]",
+      "o": ["골다공증", "퇴행성 관절염", "당뇨병", "통풍"],
+      "a": 3,
+      "h": "바람만 스쳐도 아프다는 뜻의 질환입니다.",
+      "e": "통풍(Gout)은 퓨린 대사 이상으로 요산이 축적되어 발생하는 염증성 관절 질환입니다."
+    },
+    {
+      "level": "하",
+      "q": "통풍 환자의 혈중 및 관절 주변에 과다하게 축적되어 극심한 통증과 염증을 유발하는 결정체는 무엇인가? [2018년 기출/★★★ 워크북]",
+      "o": ["칼슘 결정", "요산나트륨 결정", "콜레스테롤 플라크", "단백질 플라크"],
+      "a": 1,
+      "h": "요산이 뭉쳐서 바늘 모양의 결정을 이룹니다.",
+      "e": "통풍은 혈중 요산 농도가 높아지면서 요산나트륨(토파이) 결정이 관절과 피하 조직에 침착되는 질환입니다."
+    },
+    {
+      "level": "하",
+      "q": "통풍 발병의 남녀 비율 특성으로 옳은 것은? [2015년 기출/★★★ 워크북]",
+      "o": ["여자가 남자보다 약 20배 정도 높다.", "남자가 여자보다 약 20배 정도 높다.", "남녀 발생 비율이 동일하다.", "폐경 전 여성에게서만 독점적으로 발생한다."],
+      "a": 1,
+      "h": "여성호르몬이 요산 배출을 돕기 때문에 남성에게 압도적으로 많습니다.",
+      "e": "통풍은 남자가 여자보다 약 20배 정도 발병률이 높은 전형적인 남성 호발 질환입니다."
+    },
+    {
+      "level": "하",
+      "q": "통풍의 급성 통증 완화 및 요산 배설을 돕기 위해 의학적으로 투여하는 특효 약물은? [2015년 기출/★★★ 워크북]",
+      "o": ["인슐린", "에스트로겐", "콜키신(Colchicine)", "알란드로네이트"],
+      "a": 2,
+      "h": "통풍 발작 시 투여하는 대표적인 치료제입니다.",
+      "e": "콜키신은 통풍의 급성 발작 시 통증 완화와 요산 배설을 촉진하기 위해 사용되는 약물입니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

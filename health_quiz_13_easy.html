@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [13강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제13강: 응급처치 2 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "하", "q": "코피(비출혈)가 발생한 환자에게 가장 먼저 취해야 할 올바른 응급처치 자세는 무엇인가? [2016, 2018, 2019년 기출/★★★ 워크북]",
+      "o": [
+        "바닥에 반듯하게 눕히고 머리를 높인다.",
+        "의자에 편안하게 앉힌 후 머리를 약간 앞으로 숙이게 한다.",
+        "의자에 앉힌 후 머리를 등받이 쪽으로 완전히 젖힌다.",
+        "거꾸로 물구나무를 서게 하여 피가 코로 몰리지 않게 한다."
+      ],
+      "a": 1,
+      "h": "피가 기도로 넘어가 구토나 질식을 유발하지 않도록 해야 합니다.",
+      "e": "코피가 날 때 머리를 뒤로 젖히면 혈액이 식도나 기도로 넘어가 구토와 흡인성 폐렴, 질식을 유발할 수 있으므로 반드시 머리를 약간 앞으로 숙여야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "코피 환자가 지혈을 위해 코를 직접 압박해야 하는 정확한 부위는 어디인가? [★★★ 워크북/교재]",
+      "o": [
+        "단단한 콧등 뼈(비골) 부위",
+        "양쪽 콧방울 약간 위쪽의 부드러운 연골 부위",
+        "코 밑 인중 부위",
+        "입술 윗부분"
+      ],
+      "a": 1,
+      "h": "출혈이 주로 일어나는 부위(비중격 전하방)를 물리적으로 압박해야 피가 멎습니다.",
+      "e": "콧등 뼈 부위를 잡는 것은 지혈에 도움이 되지 않으며, 혈관이 모여 있는 콧방울 약간 위쪽의 말랑말랑한 부분을 엄지와 검지로 꽉 잡아 5~10분간 지혈해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "여름철 온열질환(열사병 등)을 예방하기 위한 기본적인 건강 수칙으로 가장 거리가 먼 것은? [★★★ 워크북 연습문제/교재]",
+      "o": [
+        "외출 시 양산이나 챙 넓은 모자를 사용하여 햇볕을 직접적으로 차단한다.",
+        "시원한 물로 자주 샤워하여 체온을 낮춘다.",
+        "가장 더운 시간대인 낮 12시부터 오후 5시 사이에는 야외 활동을 피하고 휴식을 취한다.",
+        "가장 더운 오후 시간대에 체력 단련을 위해 실내에서 강도 높은 운동을 실시한다."
+      ],
+      "a": 3,
+      "h": "더운 시간대에는 몸 안의 열생산 활동도 최소화해야 합니다.",
+      "e": "워크북 연습문제 3번 변형. 가장 더운 낮 시간대에는 실내/외를 불문하고 강도 높은 운동이나 활동을 자제하고 휴식을 취하며 활동 강도를 조절해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "더운 날씨에 심한 노동이나 강한 훈련으로 땀을 많이 흘렸을 때, 체내 '염분'이 과도하게 손실되어 다리나 팔의 근육이 굳어지고 심한 통증이 발생하는 응급 질환은? [★★★ 워크북/교재]",
+      "o": [
+        "열경련 (Heat cramp)",
+        "열사병 (Heat stroke)",
+        "동상 (Frostbite)",
+        "저체온증 (Hypothermia)"
+      ],
+      "a": 0,
+      "h": "근육에 '쥐가 났다'고 표현하는 전형적인 증상입니다.",
+      "e": "수분과 염분 손실로 수의근(손, 발목, 장딴지 등)에 강한 수축과 통증을 유발하는 상태를 '열경련'이라고 합니다."
+    },
+    {
+      "level": "하",
+      "q": "저체온증(Hypothermia)에 대한 의학적 정의로 올바른 것은? [★★★ 워크북/교재]",
+      "o": [
+        "피부 표면 온도가 36℃로 측정된 상태",
+        "겨드랑이 체온이 37℃로 측정된 상태",
+        "인체의 중심체온(심부체온)이 35℃ 이하로 떨어진 상태",
+        "중심체온이 40℃ 이상으로 급상승한 상태"
+      ],
+      "a": 2,
+      "h": "정상 체온보다 현저히 낮아져 인체 대사가 심각하게 느려지는 온도입니다.",
+      "e": "저체온증은 피부 온도가 아닌, 장기 내부의 '중심체온(심부체온)'이 35도 이하로 떨어진 상태를 말하며 경증, 중등도, 중증으로 나뉩니다."
+    },
+    {
+      "level": "하",
+      "q": "동상(Frostbite) 환자에게 응급처치를 시행할 때 절대 해서는 안 되는 행동은? [강의/교재]",
+      "o": [
+        "젖은 옷과 양말을 신속하게 벗긴다.",
+        "동상 부위를 38~42℃의 따뜻한 물에 담가 서서히 녹인다.",
+        "따뜻한 담요로 몸 전체를 감싸 체온을 올려준다.",
+        "전기담료나 난로, 모닥불에 동상 부위를 직접 바짝 대어 빠르게 녹인다."
+      ],
+      "a": 3,
+      "h": "얼어버린 피부는 뜨거움을 전혀 느끼지 못해 살이 타버립니다.",
+      "e": "동상 부위는 신경 감각이 마비되어 있으므로, 직접적인 열(난로, 불꽃 등)을 가할 경우 환자가 인지하지 못하는 사이 심각한 화상을 입어 조직이 영구 파괴될 수 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "작업 중 쇳가루 등 이물질이 눈에 깊이 박히는 안구 손상을 입었다. 이때 구조자의 올바른 처치 방법은? [★★★ 워크북/교재]",
+      "o": [
+        "손가락으로 눈을 강하게 비벼서 이물질이 눈물에 씻겨 나오게 한다.",
+        "흐르는 수돗물에 눈을 대고 강한 수압으로 씻어낸다.",
+        "소독된 핀셋을 사용하여 박힌 이물질을 힘껏 뽑아낸다.",
+        "절대 빼거나 씻지 말고, 종이컵이나 깨끗한 붕대로 이물질이 건드려지지 않게 덮은 후 즉시 병원으로 이송한다."
+      ],
+      "a": 3,
+      "h": "박힌 것을 빼는 순간 각막이 찢어지거나 방수가 쏟아져 나와 실명할 수 있습니다.",
+      "e": "안구에 박힌 이물질을 억지로 제거하거나 세척하면 2차적 각막 파열 및 심각한 눈 손상을 초래하므로 현장 상태 그대로 보호만 한 채 이송해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "구강질환 중 '구강 칸디다증'의 대표적인 증상과 특징은 무엇인가? [★★★ 워크북/교재]",
+      "o": [
+        "입에서 이스트(효모) 냄새가 나며, 구강 점막에 횐색 병변이 관찰된다.",
+        "입술 주변에만 투명한 수포가 군집을 이루어 발생한다.",
+        "혀에 화농성 반점이 생기고 극심한 신맛을 호소한다.",
+        "치아가 흔들리고 잇몸에서 피가 멈추지 않는다."
+      ],
+      "a": 0,
+      "h": "곰팡이(진균) 감염으로 우유 찌꺼기 같은 하얀 막이 생기는 질환입니다.",
+      "e": "구강 칸디다증은 진균 감염으로 점막에 하얀 백색 병변이 나타나며 이스트 냄새를 동반하는 것이 특징입니다. 치료로는 항진균제가 투여됩니다."
+    },
+    {
+      "level": "하",
+      "q": "13강 워크북 연습문제: 소아나 고령자의 경우 기도폐쇄(숨막힘)를 유발하는 가장 흔한 일상적 원인은 무엇인가? [★★★ 워크북 연습문제]",
+      "o": [
+        "손상된 치아 부스러기",
+        "음식물 (사탕, 떡, 땅콩 등)",
+        "혀가 뒤로 말려 들어감",
+        "수면 중 엎드린 자세"
+      ],
+      "a": 1,
+      "h": "노인이 떡을 먹다가, 아이가 젤리를 먹다가 흔히 발생합니다.",
+      "e": "소아나 고령자는 씹는 능력이나 연하(삼킴) 반사가 떨어져 사탕, 땅콩, 떡과 같은 '음식물'에 의해 기도가 막히는 사고가 가장 빈번합니다."
+    },
+    {
+      "level": "하",
+      "q": "13강 워크북 연습문제: 심폐소생술을 실시할 때 가장 생존확률이 높은 골든타임은 심정지 발생 후 어느 시간대인가? [★★★ 워크북 연습문제]",
+      "o": [
+        "10분 경과 후",
+        "4~6분 이내 (또는 4~5분 이내)",
+        "8~10분 사이",
+        "최소 15분 경과 후"
+      ],
+      "a": 1,
+      "h": "뇌에 산소가 공급되지 않아 영구적 손상이 오기 전의 시간입니다.",
+      "e": "심정지 후 4~5분이 지나면 뇌에 비가역적인 조직 손상이 시작되므로, 최소 4~6분 이내에 가슴압박 등 소생술이 시작되어야 뇌손상을 막고 생존율을 극대화할 수 있습니다."
+    },
+    {
+      "level": "하",
+      "q": "코피 환자가 지혈을 하는 동안 입으로 넘어오는 피를 삼키지 말고 뱉어내도록 안내하는 주된 이유는 무엇인가? [2018, 2019년 기출 응용/교재]",
+      "o": [
+        "피를 삼키면 혈액형이 바뀔 수 있기 때문이다.",
+        "피가 위장으로 들어가면 심한 구역질과 구토를 유발할 수 있기 때문이다.",
+        "피를 삼키면 맹장염이 걸리기 때문이다.",
+        "피를 삼키면 성대가 마비되어 목소리가 나오지 않기 때문이다."
+      ],
+      "a": 1,
+      "h": "위 점막은 혈액을 소화시키기 매우 불편해합니다.",
+      "e": "코피가 식도를 타고 위장으로 다량 넘어가면 위 점막을 자극하여 오심(메스꺼움)과 구토를 강하게 유발하므로 반드시 뱉게 해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "다래끼(맥립종)에 대한 응급처치 및 자가간호로 옳지 않은 것은? [2016년 기출 응용/교재]",
+      "o": [
+        "염증 초기에는 의사의 처방에 따라 항생제를 복용하여 악화를 예방한다.",
+        "부종과 발적이 있을 때 더운 물수건으로 찜질을 해준다.",
+        "다래끼가 터지면 깨끗하게 고름을 닦아낸다.",
+        "다래끼가 터져 고름이 나오는 시기에 상처 아물기를 돕기 위해 항생제 연고를 직접 상처 안으로 듬뿍 바른다."
+      ],
+      "a": 3,
+      "h": "터지고 난 후에는 고름만 잘 닦아주면 됩니다. 약을 바르면 분비물 배출이 방해될 수 있습니다.",
+      "e": "다래끼가 자연적으로 터진 후 고름을 닦아내는 시기에는 항생제 연고를 사용하지 않는 것이 교재 지침입니다."
+    },
+    {
+      "level": "하",
+      "q": "한랭질환 예방을 위한 일상생활 수칙으로 가장 올바른 것은? [★★★ 워크북/교재]",
+      "o": [
+        "체온 유지를 위해 외출 전 소주를 한 잔 마신다.",
+        "몸을 따뜻하게 하기 위해 옷을 여러 겹 꽉 끼게 겹쳐 입고 장시간 서 있는다.",
+        "추운 날 야외활동 시 여벌의 양말, 장갑, 신발 깔창을 준비한다.",
+        "땀이 식으면서 체온이 올라가므로 강도 높은 실외 훈련을 지속한다."
+      ],
+      "a": 2,
+      "h": "젖은 양말이나 신발은 열손실을 극대화하므로 갈아 신어야 합니다.",
+      "e": "여벌의 방한/방수 물품을 준비하는 것은 한랭질환 예방의 기본입니다. 음주, 꽉 끼는 옷, 장시간 서 있기 등은 말초 혈액순환을 저해하여 위험합니다."
+    },
+    {
+      "level": "하",
+      "q": "13강 워크북 연습문제: 심폐소생술 절차 중, 119 응급의료센터나 주변 사람에게 도움을 요청해야 하는 가장 적절하고 신속한 시기는 언제인가? [★★★ 워크북 연습문제]",
+      "o": [
+        "환자의 반응을 확인하고 의식이 없음을 확인한 즉시",
+        "가슴압박을 30회 실시하고 인공호흡을 하려는데 힘들 때",
+        "심폐소생술을 10분간 실시한 후 환자가 깨어나지 않을 때",
+        "가족이 현장에 모두 도착하여 상의가 끝났을 때"
+      ],
+      "a": 0,
+      "h": "전문가의 도움은 최대한 빨리 부르는 것이 우선입니다.",
+      "e": "최초 구조자는 현장 안전을 확인한 뒤 환자의 어깨를 두드려 반응을 살피고, 의식이 없다면 지체 없이 즉각 주변 사람이나 119에 구조 요청을 해야 합니다."
+    },
+    {
+      "level": "하",
+      "q": "눈썹, 안면부 등 눈 주변에 외상을 입어 출혈과 함께 피딱지가 굳어있는 것을 발견했다. 올바른 처치는? [★★★ 워크북/교재]",
+      "o": [
+        "2차 감염 예방을 위해 식염수로 피딱지를 억지로 떼어내고 세척한다.",
+        "지혈이 된 증거인 피딱지를 함부로 제거하지 말고, 눈에 패드를 댄 채 병원으로 이송한다.",
+        "뜨거운 물수건으로 피딱지를 불려서 녹여낸다.",
+        "안약을 피딱지 위에 쏟아 붓는다."
+      ],
+      "a": 1,
+      "h": "딱지가 떨어지면 피가 다시 나고 손상된 조직이 벌어질 수 있습니다.",
+      "e": "외상에 의한 출혈 및 피딱지는 자연 지혈 및 보호막 역할을 하므로, 함부로 떼어내지 않고 전문 의료진에게 맡겨야 합니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

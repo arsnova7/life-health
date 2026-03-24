@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활과 건강 퀴즈 [7강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+    .score-num { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
+    .wrong-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제7강: 건강한 생활습관 1 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <div class="score-num"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+        <p id="result-msg"></p>
+        <div id="wrong-area" style="display:none;">
+            <p style="font-weight:bold; color:var(--danger);">❌ 틀린 문제 번호:</p>
+            <div class="wrong-list" id="wrong-numbers"></div>
+        </div>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 
+    const quizData = [
+        {"level": "하", "q": "잘못된 생활습관(운동부족, 불균형한 식생활 등)을 오래 유지하여 건강의 균형이 무너지면서 발생하는 만성질환을 지칭하는 현대적 용어는? [★★★ 워크북/교재]",
+      "o": ["유전성 대사병", "생활습관병", "환경성 급성질환", "특발성 면역병"],
+      "a": 1,
+      "h": "대한내과학회가 2003년 '성인병'이라는 명칭을 바꾸어 부르기 시작했습니다.",
+      "e": "과거 성인병이라 불렸으나, 발병 원인이 생활습관에 있음이 밝혀지면서 '생활습관병'으로 개칭되었습니다."
+    },
+    {
+      "level": "하",
+      "q": "과거 일본에서 유래되어 '나이가 들면 누구라도 걸리는 병'이라는 인식을 주었던 생활습관병의 옛 명칭은? [교재]",
+      "o": ["유복병", "문명병", "성인병", "노인병"],
+      "a": 2,
+      "h": "40대 이후 성인에게 급격히 늘어난다는 의미에서 쓰였습니다.",
+      "e": "성인병은 일본에서 유래된 용어로, 최근에는 젊은 층에도 발생하고 생활습관이 원인이므로 생활습관병으로 불립니다."
+    },
+    {
+      "level": "하",
+      "q": "뇌심혈관질환 및 당뇨병 위험을 높이는 비만, 고혈압, 이상지질혈증 등이 한 개인에게 복합적으로 나타나는 상태를 무엇이라 하는가? [★★★ 워크북/교재]",
+      "o": ["대사증후군", "만성피로증후군", "소화기증후군", "신경퇴행증후군"],
+      "a": 0,
+      "h": "WHO에서 1998년에 명명한 용어로, 여러 대사 이상이 겹친 상태입니다.",
+      "e": "비만, 혈압 상승, 혈당 상승, 지질 이상 등이 한꺼번에 나타나는 것을 '대사증후군'이라 합니다."
+    },
+    {
+      "level": "하",
+      "q": "대사증후군은 5가지 위험요인 중 최소 몇 가지 이상에 해당할 때 진단되는가? [★★★ 워크북/교재]",
+      "o": ["1가지 이상", "2가지 이상", "3가지 이상", "5가지 모두 해당"],
+      "a": 2,
+      "h": "절반 이상을 넘겨야 진단됩니다.",
+      "e": "대사증후군은 복부비만, 고혈압, 높은 혈당, 높은 중성지방, 낮은 HDL 콜레스테롤 중 3가지 이상일 때 진단합니다."
+    },
+    {
+      "level": "하",
+      "q": "대사증후군 진단기준 중 우리나라 남성의 복부비만(허리둘레) 기준 수치는? [★★★ 워크북/교재]",
+      "o": ["80cm 이상", "85cm 이상", "90cm 이상", "95cm 이상"],
+      "a": 2,
+      "h": "여성보다 5cm 더 높습니다.",
+      "e": "우리나라 복부비만 기준 허리둘레는 남성 90cm 이상, 여성 85cm 이상입니다."
+    },
+    {
+      "level": "하",
+      "q": "대사증후군 진단기준 중 '높은 혈압'의 기준 수치로 올바른 것은? [★★★ 워크북/교재]",
+      "o": ["수축기 120 이상 또는 이완기 80 이상", "수축기 130 이상 또는 이완기 85 이상", "수축기 140 이상 또는 이완기 90 이상", "수축기 150 이상 또는 이완기 100 이상"],
+      "a": 1,
+      "h": "고혈압 전 단계의 초기 수치부터 위험군으로 봅니다.",
+      "e": "대사증후군의 혈압 기준은 130/85mmHg 이상이거나 고혈압 약을 복용 중인 경우입니다."
+    },
+    {
+      "level": "하",
+      "q": "대사증후군 진단기준 중 '높은 혈당'의 기준이 되는 공복혈당 수치는? [★★★ 워크북/교재]",
+      "o": ["80 mg/dL 이상", "90 mg/dL 이상", "100 mg/dL 이상", "126 mg/dL 이상"],
+      "a": 2,
+      "h": "당뇨 확진 수치(126)보다 낮습니다. 주의가 필요한 단계부터 잡습니다.",
+      "e": "대사증후군의 공복혈당 기준은 100mg/dL 이상이거나 당뇨병 약/인슐린 치료를 받는 경우입니다."
+    },
+    {
+      "level": "하",
+      "q": "우리 몸의 콜레스테롤 중 동맥경화의 위험을 직접적으로 증가시키는 '나쁜 콜레스테롤'의 명칭은? [★★★ 워크북/교재]",
+      "o": ["HDL 콜레스테롤", "LDL 콜레스테롤", "유리지방산", "아미노산"],
+      "a": 1,
+      "h": "혈관 벽에 들러붙어 병을 일으킵니다.",
+      "e": "LDL(저밀도지단백) 콜레스테롤은 혈관에 축적되어 동맥경화를 일으키는 해로운 콜레스테롤입니다."
+    },
+    {
+      "level": "하",
+      "q": "우리 몸의 혈관에서 콜레스테롤 찌꺼기를 청소하여 없애주는 역할을 하는 '착한 콜레스테롤'의 명칭은? [★★★ 워크북/교재]",
+      "o": ["LDL 콜레스테롤", "중성지방", "인지질", "HDL 콜레스테롤"],
+      "a": 3,
+      "h": "High-density lipoprotein의 약자입니다. 높을수록 좋습니다.",
+      "e": "HDL(고밀도지단백) 콜레스테롤은 말초 혈관의 콜레스테롤을 제거하므로 수치가 높을수록 좋습니다."
+    },
+    {
+      "level": "하",
+      "q": "대사증후군의 가장 근본적인 발병 원인으로 의학계에서 추정하는 병태생리학적 기전은? [★★★ 워크북/강의]",
+      "o": ["단백질 결핍증", "인슐린 저항성", "칼슘 과다증", "에스트로겐 폭발"],
+      "a": 1,
+      "h": "세포가 포도당을 받아들이는 문을 잘 열어주지 않는 상태입니다.",
+      "e": "과식, 운동부족 등으로 복부비만이 생기면 인슐린에 대한 반응이 떨어지는 '인슐린 저항성'이 생기며, 이것이 대사증후군의 근본 원인입니다."
+    },
+    {
+      "level": "하",
+      "q": "당뇨병의 전형적인 '3다(多)' 증상에 해당하지 않는 것은? [★★★ 워크북/교재]",
+      "o": ["다음(물을 많이 마심)", "다뇨(소변을 많이 봄)", "다식(많이 먹음)", "다한(땀을 많이 흘림)"],
+      "a": 3,
+      "h": "마시고, 먹고, 싸는 것과 관련된 증상입니다.",
+      "e": "당뇨병의 전형적 증상은 다음, 다식, 다뇨 그리고 원인 불명의 체중 감소입니다."
+    },
+    {
+      "level": "하",
+      "q": "혈당을 측정할 때 최근 2~4개월간의 장기간 평균 혈당 조절 상태를 정확히 반영하여 당뇨 관리에 핵심이 되는 검사는? [강의/교재]",
+      "o": ["당화혈색소(HbA1c) 검사", "요단백 검사", "백혈구 수치 검사", "간기능(AST/ALT) 검사"],
+      "a": 0,
+      "h": "적혈구의 혈색소에 당이 얼마나 결합했는지를 봅니다.",
+      "e": "당화혈색소 검사는 일시적 식사나 활동에 영향받지 않고 지난 2~4개월의 평균 혈당 상태를 보여줍니다."
+    },
+    {
+      "level": "하",
+      "q": "허리둘레를 정확하게 측정하는 해부학적 위치로 올바른 것은? [교재]",
+      "o": ["배꼽에서 정확히 5cm 위쪽", "가장 얇은 허리 부위 어디든 무관", "갈비뼈 가장 아래와 골반 가장 윗부분(장골능)의 중간 부위", "골반 뼈 중 가장 튀어나온 부위"],
+      "a": 2,
+      "h": "WHO에서 정한 국제 표준 측정 위치입니다.",
+      "e": "올바른 허리둘레 측정법은 갈비뼈 하단과 골반 상단(장골능)의 중간 지점을 편안히 숨을 내쉰 상태에서 재는 것입니다."
+    },
+    {
+      "level": "하",
+      "q": "전체 고혈압의 90% 정도를 차지하며, 명확한 특정 질환 원인 없이 비만, 짜게 먹기, 스트레스 등 생활습관과 관련된 고혈압은? [2015년, 2017년 기출 변형/교재]",
+      "o": ["이차성 고혈압", "일차성(본태성) 고혈압", "신성 고혈압", "내분비성 고혈압"],
+      "a": 1,
+      "h": "기질적 원인이 없이 본래 타고난 체질과 습관으로 생겼다는 의미입니다.",
+      "e": "2015/2017 기출. 생활습관과 유전 등이 복합적으로 작용하는 1차성(본태성) 고혈압이 전체의 대부분(90%)을 차지합니다."
+    },
+    {
+      "level": "하",
+      "q": "가정에서 간이 혈당 측정기로 혈당을 잴 때, 피가 안 나온다고 손가락 끝을 강하게 쥐어짜면 안 되는 생리학적 이유는? [강의/교재]",
+      "o": ["혈관이 터져서 과다 출혈이 발생하므로", "조직액이 섞여 나와 정확한 혈당 수치를 반영할 수 없으므로", "인슐린이 한꺼번에 쏟아져 나와 저혈당 쇼크가 오므로", "바늘이 뼛속까지 깊숙이 들어가 골수염을 유발하므로"],
+      "a": 1,
+      "h": "순수한 피가 아니라 피부 밑의 맑은 진물 같은 것이 섞이게 됩니다.",
+      "e": "손가락을 쥐어짜면 혈액에 주변 조직액이 섞여 혈당 수치가 희석되거나 부정확해질 수 있습니다."}
+    ];
+
+    let curIdx = 0;
+    let score = 0;
+    let wrongIndices = [];
+    let isAnswered = false;
+
+    function loadQuestion() {
+        isAnswered = false;
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    let wrongCount = 0;
+
+    function checkAnswer(idx, btn) {
+        if (isAnswered) return;
+
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            // 정답
+            isAnswered = true;
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            score++;
+            document.getElementById('exp-text').innerText = q.e;
+            document.getElementById('exp-box').style.display = 'block';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            // 오답
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 표시
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답+해설 공개
+                isAnswered = true;
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                wrongIndices.push(curIdx + 1);
+                document.getElementById('exp-text').innerText = q.e;
+                document.getElementById('exp-box').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('correct-count').innerText = score;
+        document.getElementById('total-count').innerText = quizData.length;
+        
+        if (wrongIndices.length > 0) {
+            document.getElementById('wrong-area').style.display = 'block';
+            document.getElementById('wrong-numbers').innerText = wrongIndices.join(', ') + " 번 문제를 다시 확인해 보세요.";
+            document.getElementById('result-msg').innerText = "조금만 더 힘내볼까요? 틀린 부분을 복습해 보세요! 💪";
+        } else {
+            document.getElementById('result-msg').innerText = "와우! 완벽합니다. 장학금이 눈앞에 보이네요! 🍗";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>
